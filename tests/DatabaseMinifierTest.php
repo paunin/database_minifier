@@ -2,10 +2,13 @@
 
 namespace Lazada\DatabaseMinifier\Test;
 
-class ExampleTest extends \PHPUnit_Framework_TestCase
+/**
+ * Class DatabaseMinifierTest
+ *
+ * @package Lazada\DatabaseMinifier\Test
+ */
+class DatabaseMinifierTest extends \PHPUnit_Framework_TestCase
 {
-
-
     /**
      * Test that true does in fact equal true
      */

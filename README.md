@@ -6,15 +6,46 @@
 
 Via Composer
 
-``` bash
-$ composer require lazada_com/database_minifier
-```
+Add information about new package in your `composer.json`
+
+    "repositories": [
+        ...
+        {
+          "type": "vcs",
+          "url": "https://github.com/lazada-com/database_minifier",
+          "name": "lazada-com/database_minifier"
+        }
+    ],
+    
+    "require-dev": {
+        "lazada-com/database_minifier": ">=0.0.1"
+    },
 
 ## Usage
 
-``` php
+Create new object:
 
-```
+    $dm = new \Lazada\DatabaseMinifier\DatabaseMinifier($masterConfig, $slaveConfig);
+
+### DatabaseMinifier::buildJsonTree()
+
+You can build your database tree and use it in your purposes
+
+    {
+        "%table%": {
+          "primary_key": ["%PK1%", "%PK2%" /* , ... * /],
+          "references": {
+              "%table%": {
+                  "%fk%": "%pk%" /* , ... * /
+              } /* , ... * /
+          },
+          "referenced_by": {
+              "%table%": {
+                  "%fk%": "%pk%" /* , ... * /
+              } /* , ... * /
+          }
+        } /* , ... * /
+    }
 
 ## Testing
 
@@ -24,11 +55,12 @@ $ phpunit
 
 ## Contributing
 
-Please see [CONTRIBUTING](https://github.com/thephpleague/:package_name/blob/master/CONTRIBUTING.md) for details.
+Please see [CONTRIBUTING](./CONTRIBUTING.md) for details.
 
 ## Credits
 
-- [paunin](https://github.com/paunin)
+- [Dmitriy Paunin](https://github.com/paunin)
+- [Ruben Ribeiro](https://github.com/rmribeiro)
 
 ## License
 

@@ -1,0 +1,52 @@
+<?php
+
+namespace Lazada\DatabaseMinifier\Test;
+
+    /**
+     * Class BaseTest
+     *
+     * @package Lazada\DatabaseMinifier\Test
+     */
+/**
+ * Class BaseTest
+ *
+ * @package Lazada\DatabaseMinifier\Test
+ */
+class BaseTest extends \PHPUnit_Framework_TestCase
+{
+    /**
+     * It should be here to prevent phpunit notice
+     */
+    public function testTrueIsTrue()
+    {
+        static::assertTrue(true);
+    }
+
+    /**
+     * @return array
+     */
+    protected function getConfigMaster()
+    {
+        return [
+            'dbname'         => '{DB_NAME}',
+            'username'       => '{USER_NAME}',
+            'password'       => '{PASSWORD}',
+            'host'           => '127.0.0.1',
+            'driver_options' => null
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    protected function getConfigSlave()
+    {
+        return [
+            'dbname'         => '{DB_NAME}',
+            'username'       => '{USER_NAME}',
+            'password'       => '{PASSWORD}',
+            'host'           => '127.0.0.1',
+            'driver_options' => null
+        ];
+    }
+}

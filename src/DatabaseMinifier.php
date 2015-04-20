@@ -2,21 +2,8 @@
 
 namespace Lazada\DatabaseMinifier;
 
-    /**
-     * Class DatabaseMinifier
-     *
-     * @package Lazada\DatabaseMinifier
-     */
-    /**
-     * Class DatabaseMinifier
-     *
-     * @package Lazada\DatabaseMinifier
-     */
-/**
- * Class DatabaseMinifier
- *
- * @package Lazada\DatabaseMinifier
- */
+use Lazada\DatabaseMinifier\Exception\DatabaseMinifierException;
+
 /**
  * Class DatabaseMinifier
  *
@@ -49,6 +36,19 @@ class DatabaseMinifier
      * @var \PDO
      */
     protected $schemaPdo;
+    /**
+     * @var array
+     */
+    protected $arrayTree;
+    /**
+     * @var array
+     */
+    protected $builded = [];
+
+    /**
+     * @var array
+     */
+    protected $copied = [];
 
     /**
      * DatabaseMinifier constructor.
@@ -58,6 +58,8 @@ class DatabaseMinifier
      */
     public function __construct(array $masterDbConfig, array $slaveDbConfig = null)
     {
+        $this->setDriver('mysql'); //TODO: support other RDBMS
+
         $this->setMasterDbConfig($masterDbConfig);
         $this->setMasterPdo($this->createPdo($masterDbConfig));
 
@@ -67,8 +69,28 @@ class DatabaseMinifier
 
         if ($slaveDbConfig) {
             $this->setSlaveDbConfig($slaveDbConfig);
-            $this->setSlavePdo($this->createPdo($slaveDbConfig));
+            $this->setSlavePdo($this->createPdo($this->getSlaveDbConfig()));
         }
+    }
+
+    /**
+     * @return array
+     */
+    public function getBuilded()
+    {
+        return $this->builded;
+    }
+
+    /**
+     * @param array $builded
+     *
+     * @return self
+     */
+    public function setBuilded($builded)
+    {
+        $this->builded = $builded;
+
+        return $this;
     }
 
     /**
@@ -174,6 +196,26 @@ class DatabaseMinifier
     /**
      * @return array
      */
+    public function getCopied()
+    {
+        return $this->copied;
+    }
+
+    /**
+     * @param array $copied
+     *
+     * @return self
+     */
+    public function setCopied($copied)
+    {
+        $this->copied = $copied;
+
+        return $this;
+    }
+
+    /**
+     * @return array
+     */
     public function getSlaveDbConfig()
     {
         return $this->slaveDbConfig;
@@ -192,25 +234,30 @@ class DatabaseMinifier
     }
 
     /**
-     * @return string json object in format
-     *  {
-     *      "%table%": {
+     * Build 2-level tree for your database
+     *
+     * @return array in format
+     *  [
+     *      "%table%": [
      *          "primary_key": ["%PK1%", "%PK2%" /* , ... * /],
-     *          "references": {
-     *              "%table%": {
-     *                  "%fk%": "%pk%" /* , ... * /
-     *              } /* , ... * /
-     *          },
-     *          "referenced_by": {
-     *              "%table%": {
-     *                  "%fk%": "%pk%" /* , ... * /
-     *              } /* , ... * /
-     *          }
-     *      } /* , ... * /
-     *  }
+     *          "references": [
+     *              "%table%": [
+     *                  ["%fk%": "%pk%" /* , ... * /] /* , ... * /
+     *              ] /* , ... * /
+     *          ],
+     *          "referenced_by": [
+     *              "%table%": [
+     *                  ["%fk%": "%pk%" /* , ... * /] /* , ... * /
+     *              ] /* , ... * /
+     *          ]
+     *      ] /* , ... * /
+     *  ]
      */
-    public function buildJsonTree()
+    public function buildArrayTree()
     {
+        if (null !== $this->arrayTree) {
+            return $this->arrayTree;
+        }
         $result = [];
 
         $pks = $this->getPks();
@@ -226,25 +273,289 @@ class DatabaseMinifier
             $result[$table]['primary_key'] = array_key_exists($table, $pks) ? $pks[$table] : [];
         }
 
-        $sql = <<<SQL
-            SELECT i.TABLE_NAME, GROUP_CONCAT(DISTINCT k.COLUMN_NAME SEPARATOR ',') AS 'COLUMN_NAME', k.REFERENCED_TABLE_NAME, GROUP_CONCAT(DISTINCT k.REFERENCED_COLUMN_NAME SEPARATOR ',') AS 'REFERENCED_COLUMN_NAME'
-            FROM TABLE_CONSTRAINTS i
-              INNER JOIN KEY_COLUMN_USAGE k ON i.CONSTRAINT_NAME = k.CONSTRAINT_NAME
-            WHERE i.CONSTRAINT_TYPE = 'FOREIGN KEY' AND i.CONSTRAINT_SCHEMA =  '{$this->getMasterDbConfig()['dbname']}' AND k.REFERENCED_TABLE_NAME IS NOT NULL
-              GROUP BY k.CONSTRAINT_NAME
-SQL;
-
-        $query = $this->getSchemaPdo()->query($sql);
-
-        while ($row = $query->fetch()) {
-            $result[$row['TABLE_NAME']]['references'][$row['REFERENCED_TABLE_NAME']] = array_combine(
-                explode(',', $row['COLUMN_NAME']),
-                explode(',', $row['REFERENCED_COLUMN_NAME'])
-            );
-        }
+        $result = $this->createReferences($result);
         $result = $this->createReferencedBy($result);
 
+        $this->arrayTree = $result;
+
+        return $result;
+    }
+
+    /**
+     * @see self::buildArrayTree
+     * @return string json object
+     */
+    public function buildJsonTree()
+    {
+        $result = $this->buildArrayTree();
+
         return json_encode($result);
+    }
+
+    /**
+     * Copy record with all needed dependencies (constraints)
+     *
+     * @param string $tableName
+     * @param array  $criteria         ['%field%'=>'%value%' /* , ... * /]
+     * @param bool   $copyReferencedBy if we need referenced records
+     *
+     * @return array
+     */
+    public function copyRecordsByCriteria($tableName, array $criteria = [], $copyReferencedBy = true)
+    {
+        $this->setCopied([]);
+
+        return $this->copyRecordsByCriteriaInternal($tableName, $criteria, $copyReferencedBy);
+    }
+
+    /**
+     * Copy record with all needed dependencies using PKs
+     *
+     * @see self::copyRecordsByCriteria
+     * @see self::copyRecordsByPk
+     *
+     * @param string $tableName
+     * @param array  $pks in format ['%pk1%', '%pk2%' /* , ... * /] OR [['%pk1_1%', '%pk1_2%' /* , ... * /], ['%pk2_1%', '%pk2_2%' /* , ... * /] /* , ... * /]
+     * @param bool   $copyReferencedBy
+     *
+     * @return array
+     */
+    public function copyRecordsByPks($tableName, array $pks = [], $copyReferencedBy = true)
+    {
+        $result = [];
+        foreach ($pks as $pk) {
+            $key          = is_array($pk) ? implode(',', $pk) : $pk;
+            $result[$key] = $this->copyRecordsByPk($tableName, $pk, $copyReferencedBy);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Copy record with all needed dependencies using PK
+     *
+     * @see self::copyRecordsByCriteria
+     *
+     * @param string $tableName
+     * @param mixed  $pk in format '%pk%' OR ['%pk_1%', '%pk_2%' /* , ... * /]
+     * @param bool   $copyReferencedBy
+     *
+     * @return array
+     * @throws DatabaseMinifierException
+     */
+    public function copyRecordsByPk($tableName, $pk, $copyReferencedBy = true)
+    {
+
+        $table = $this->getTable($tableName);
+
+        if (!is_array($pk)) {
+            $pk = [$pk];
+        }
+
+        $criteria = array_combine($table['primary_key'], $pk);
+
+        return $this->copyRecordsByCriteria($tableName, $criteria, $copyReferencedBy);
+    }
+
+    /**
+     * Build text-based uml for DB
+     *
+     * @see      http://plantuml.com/
+     *
+     * @param array $tables
+     * @param bool  $references
+     * @param bool  $referenced
+     *
+     * @return string
+     * @internal param array $tables
+     */
+    public function buildPlantuml($tables = [], $references = true, $referenced = true)
+    {
+        if (!is_array($tables)) {
+            $tables = [$tables];
+        }
+        if (!count($tables)) {
+            $tables = $this->getTables();
+        }
+
+        $result = $this->buildPlantumlForTables($tables, $references, $referenced);
+
+        return "@startuml\n" . implode("\n", array_unique($result)) . "\n@enduml";
+    }
+
+    /**
+     * @param $tableName
+     *
+     * @return array
+     * @throws DatabaseMinifierException
+     */
+    public function getTable($tableName)
+    {
+        $tree = $this->buildArrayTree();
+
+        if (!array_key_exists($tableName, $tree)) {
+            throw new DatabaseMinifierException("Table $tableName not found in db");
+        }
+
+        return $tree[$tableName];
+    }
+
+    /**
+     * @param      $tables
+     * @param bool $references
+     * @param bool $referenced
+     *
+     * @return array
+     */
+    protected function buildPlantumlForTables($tables, $references = true, $referenced = true)
+    {
+        $result = [];
+        foreach ($tables as $table) {
+            $tresult = $this->buildPlantumlForTable($table, $references, $referenced);
+            $result  = array_unique(array_merge($result, $tresult));
+        }
+
+        return $result;
+    }
+
+    /**
+     *
+     * @param string $tableName
+     * @param bool   $references
+     * @param bool   $referenced
+     *
+     * @return array
+     * @throws DatabaseMinifierException
+     * @internal param string $table
+     */
+    protected function buildPlantumlForTable($tableName, $references = true, $referenced = true)
+    {
+        $builded = $this->getBuilded();
+        if (array_key_exists($tableName, $builded)) {
+            return [];
+        }
+
+        $table  = $this->getTable($tableName);
+        $result = [];
+        foreach ($table['references'] as $refTable => $links) {
+            foreach ($links as $link) {
+
+                $fk = implode(',', array_keys($link));
+                $pk = implode(',', $link);
+
+                $result[] = $tableName . " \"[$fk]" . '\n' . "∞\" ---* \"[$pk]" . '\n' . "1\"  $refTable";
+            }
+        }
+
+        $builded[$tableName] = 1;
+        $this->setBuilded($builded);
+        $referencesResult = [];
+        if ($references && count($table['references'])) {
+            $referencesResult = $this->buildPlantumlForTables(array_keys($table['references']), true, false);
+        }
+        $referencedResult = [];
+        if ($referenced && count($table['referenced_by'])) {
+            $referencedResult = $this->buildPlantumlForTables(array_keys($table['referenced_by']), false, true);
+        }
+
+        return array_unique(array_merge($result, $referencesResult, $referencedResult));
+    }
+
+    /**
+     * @param string $tableName
+     * @param array  $row
+     *
+     * @return array
+     * @throws DatabaseMinifierException
+     */
+    protected function copyReferences($tableName, array $row)
+    {
+        $result = [];
+        $table  = $this->getTable($tableName);
+        foreach ($table['references'] as $table => $refs) {
+            foreach ($refs as $links) {
+                $criteria = [];
+                foreach ($links as $fk => $pk) {
+                    $criteria[$pk] = $row[$fk];
+                }
+                $result[$table] = $this->copyRecordsByCriteriaInternal($table, $criteria, false);
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param string $tableName
+     * @param array  $row
+     * @param bool   $copyReferencedBy
+     *
+     * @return array
+     * @throws DatabaseMinifierException
+     */
+    protected function copyReferencedBy($tableName, array $row, $copyReferencedBy = true)
+    {
+        $result = [];
+        $table  = $this->getTable($tableName);
+        foreach ($table['referenced_by'] as $table => $refs) {
+            foreach ($refs as $links) {
+                $criteria = [];
+                foreach ($links as $fk => $pk) {
+                    $criteria[$fk] = $row[$pk];
+                }
+                $result[$table] = $this->copyRecordsByCriteriaInternal($table, $criteria, $copyReferencedBy);
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param string $tableName
+     * @param array  $row
+     *
+     * @return bool - true if copied | false if row has been pasted in this session
+     * @throws DatabaseMinifierException
+     * @throws \Exception
+     */
+    protected function pasteRow($tableName, $row)
+    {
+        $insertData        = [];
+        $updateExpressions = [];
+        $fields            = [];
+        foreach ($row as $field => $value) {
+            $token = ":{$field}_token_insert";
+            //$updateToken              = ":{$field}_token_update";
+            $insertData[$token] = $value;
+            //$updateData[$updateToken] = $value;
+            $updateExpressions[] = "`$field` = $token";
+            $fields[]            = "`$field`";
+        }
+
+        $sql = "INSERT INTO $tableName (" . implode(', ', $fields) . ")
+                VALUES (" . implode(', ', array_keys($insertData)) . ")
+                ON DUPLICATE KEY UPDATE " . implode(',', $updateExpressions) . "; ";
+
+        $query = $this->getSlavePdo()->prepare($sql);
+
+        try {
+            $result = $query->execute($insertData);
+        } catch (\Exception $e) {
+            $table    = $this->getTable($tableName);
+            $pks      = implode(', ', $table['primary_key']);
+            $pkValues = [];
+            foreach ($table['primary_key'] as $pk) {
+                $pkValues[] = $row[$pk];
+            }
+
+            $pkValue = implode(', ', $pkValues);
+
+            throw new DatabaseMinifierException(
+                "Unable to paste row with PK [$pks] = ($pkValue) in table $tableName " . $e->getMessage()
+            );
+        }
+
+        return $result;
     }
 
     /**
@@ -263,28 +574,13 @@ SQL;
             array_key_exists('driver_options', $config) ? $config['driver_options'] : null
         );
 
+        $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+
         return $pdo;
     }
 
     /**
-     * @param $tables
-     *
-     * @return mixed
-     */
-    protected function createReferencedBy($tables)
-    {
-        $result = $tables;
-        foreach ($tables as $table => $info) {
-            foreach ($info['references'] as $refTable => $relations) {
-                $result[$refTable]['referenced_by'][$table] = $relations;
-            }
-        }
-
-        return $result;
-    }
-
-    /**
-     * @return array
+     * @return array of tables' names
      */
     protected function getTables()
     {
@@ -303,7 +599,64 @@ SQL;
     }
 
     /**
-     * @return array
+     * @param array $result
+     *
+     * @return mixed
+     */
+    protected function createReferences($result)
+    {
+        $sql = <<<SQL
+            SELECT i.TABLE_NAME, GROUP_CONCAT(DISTINCT k.COLUMN_NAME SEPARATOR ',') AS 'COLUMN_NAME', k.REFERENCED_TABLE_NAME, GROUP_CONCAT(DISTINCT k.REFERENCED_COLUMN_NAME SEPARATOR ',') AS 'REFERENCED_COLUMN_NAME'
+            FROM TABLE_CONSTRAINTS i
+              INNER JOIN KEY_COLUMN_USAGE k ON i.CONSTRAINT_NAME = k.CONSTRAINT_NAME AND k.CONSTRAINT_SCHEMA = i.CONSTRAINT_SCHEMA
+            WHERE i.CONSTRAINT_TYPE = 'FOREIGN KEY' AND i.CONSTRAINT_SCHEMA =  '{$this->getMasterDbConfig()['dbname']}' AND k.REFERENCED_TABLE_NAME IS NOT NULL
+              GROUP BY k.CONSTRAINT_NAME
+            ORDER BY k.REFERENCED_COLUMN_NAME
+SQL;
+
+        $query = $this->getSchemaPdo()->query($sql);
+
+        while ($row = $query->fetch()) {
+            if (!array_key_exists($row['REFERENCED_TABLE_NAME'], $result[$row['TABLE_NAME']]['references'])) {
+                $result[$row['TABLE_NAME']]['references'][$row['REFERENCED_TABLE_NAME']] = [];
+            }
+
+            $link = array_combine(
+                explode(',', $row['COLUMN_NAME']),
+                explode(',', $row['REFERENCED_COLUMN_NAME'])
+            );
+            ksort($link);
+
+            $result[$row['TABLE_NAME']]['references'][$row['REFERENCED_TABLE_NAME']][] = $link;
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param array[] $tables
+     *
+     * @return mixed
+     */
+    protected function createReferencedBy($tables)
+    {
+        $result = $tables;
+        foreach ($tables as $table => $info) {
+            foreach ($info['references'] as $refTable => $relations) {
+                $result[$refTable]['referenced_by'][$table] = $relations;
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * @return array in format
+     *  [
+     *      '%table%' => [
+     *          '%pk1%', '%pk2%' /* , ... * /
+     *      ] /* , ... * /
+     *  ]
      */
     protected function getPks()
     {
@@ -325,6 +678,59 @@ SQL;
         }
 
         return $pks;
+    }
+
+    /**
+     * @param       $tableName
+     * @param array $criteria
+     * @param       $copyReferencedBy
+     *
+     * @return array
+     */
+    protected function copyRecordsByCriteriaInternal($tableName, array $criteria, $copyReferencedBy)
+    {
+        $results    = [];
+        $conditions = [];
+        foreach (array_keys($criteria) as $key) {
+            $conditions[] = "$key = :$key";
+        }
+
+        $sql   = "SELECT * FROM {$tableName} WHERE " . (implode(' AND ', $conditions));
+        $query = $this->getMasterPdo()->prepare($sql);
+
+        $query->execute($criteria);
+
+        while ($row = $query->fetch(\PDO::FETCH_ASSOC)) {
+
+            // WE need to prevent situation when we will copy one row more than once. What for?
+            $copied  = $this->getCopied();
+            $rowHash = md5($tableName . json_encode($row));
+            if (array_key_exists($rowHash, $copied)) {
+                continue;
+            }
+
+            $result = [
+                'record'        => [],
+                'references'    => [],
+                'referenced_by' => []
+            ];
+
+            //TODO: what if we have not existed references
+            $result['references'] = $this->copyReferences($tableName, $row);
+
+            $this->pasteRow($tableName, $row);
+
+            $copied[$rowHash] = 1;
+            $this->setCopied($copied);
+
+            if ($copyReferencedBy) {
+                $result['referenced_by'] = $this->copyReferencedBy($tableName, $row, $copyReferencedBy);
+            }
+            $result['record'] = $row;
+            $results[]        = $result;
+        }
+
+        return $results;
     }
 
 }

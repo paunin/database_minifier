@@ -49,3 +49,7 @@ crashlytics-build.properties
 
 phpunit.xml
 build
+src/config.json
+src/minifier.json
+vendor
+/_*

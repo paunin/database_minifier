@@ -1,8 +1,8 @@
 {
-  "name": "lazada-com/database_minifier",
+  "name": "lazada/database-minifier",
   "description": "This package allows you to: move one record(with all dependencies) from one Db to another with the same structure",
   "keywords": [],
-  "homepage": "https://github.com/lazada-com/database_minifier",
+  "homepage": "https://gitlab.lzd.co/operations/database-minifier/",
   "license": "MIT",
   "authors": [
     {
@@ -20,12 +20,12 @@
   },
   "autoload": {
     "psr-4": {
-      "Lazada\\DatabaseMinifier\\": "src"
+      "Paunin\\DatabaseMinifier\\": "src"
     }
   },
   "autoload-dev": {
     "psr-4": {
-      "Lazada\\DatabaseMinifier\\Test\\": "tests"
+      "Paunin\\DatabaseMinifier\\Test\\": "tests"
     }
   },
   "extra": {

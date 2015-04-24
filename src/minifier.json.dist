@@ -1,0 +1,38 @@
+{
+  "connections": {
+    "source1": {
+      "dbname": "%dbname%",
+      "username": "%user%",
+      "password": "%pwd%",
+      "host": "%host%",
+      "driver": "mysql",
+      "out_file": "php://stdout",
+    },
+    "source2": {
+      "dbname": "%dbname%",
+      "username": "%user%",
+      "password": "%pwd%",
+      "host": "%host%"
+      "driver": "mysql"
+    },
+  },
+
+  "relations":{
+
+  },
+
+  "directives": [
+    {
+      "method": "copyRecordsByCriteria",
+      "arguments": [
+        "source1:country",
+        {
+          "id": {
+            "value": 1,
+            "operator": "<="
+          }
+        }
+      ]
+    }
+  ]
+}

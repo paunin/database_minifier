@@ -11,7 +11,7 @@
             },
             "references": [],
             "referenced_by": {
-                "city": [
+                "source1:city": [
                     {
                         "record": {
                             "idcity": "1",
@@ -22,10 +22,10 @@
                             "country_id2": "compose_pk"
                         },
                         "references": {
-                            "country": []
+                            "source1:country": []
                         },
                         "referenced_by": {
-                            "street": [
+                            "source1:street": [
                                 {
                                     "record": {
                                         "idstreet": "1",
@@ -36,11 +36,11 @@
                                         "country_id2": "compose_pk"
                                     },
                                     "references": {
-                                        "country": [],
-                                        "city": []
+                                        "source1:country": [],
+                                        "source1:city": []
                                     },
                                     "referenced_by": {
-                                        "house": [
+                                        "source1:house": [
                                             {
                                                 "record": {
                                                     "idhouse": "1",
@@ -48,18 +48,18 @@
                                                     "street_idstreet": "1"
                                                 },
                                                 "references": {
-                                                    "street": []
+                                                    "source1:street": []
                                                 },
                                                 "referenced_by": {
-                                                    "persone_has_house": [
+                                                    "source1:persone_has_house": [
                                                         {
                                                             "record": {
                                                                 "persone_idpersone": "1",
                                                                 "house_idhouse": "1"
                                                             },
                                                             "references": {
-                                                                "house": [],
-                                                                "persone": [
+                                                                "source1:house": [],
+                                                                "source1:persone": [
                                                                     {
                                                                         "record": {
                                                                             "idpersone": "1",
@@ -70,8 +70,7 @@
                                                                             "man": "1"
                                                                         },
                                                                         "references": {
-                                                                            "country": [],
-                                                                            "persone": []
+                                                                            "source1:country": []
                                                                         },
                                                                         "referenced_by": []
                                                                     }
@@ -89,34 +88,18 @@
                                                     "street_idstreet": "1"
                                                 },
                                                 "references": {
-                                                    "street": []
+                                                    "source1:street": []
                                                 },
                                                 "referenced_by": {
-                                                    "persone_has_house": [
+                                                    "source1:persone_has_house": [
                                                         {
                                                             "record": {
                                                                 "persone_idpersone": "1",
                                                                 "house_idhouse": "2"
                                                             },
                                                             "references": {
-                                                                "house": [],
-                                                                "persone": [
-                                                                    {
-                                                                        "record": {
-                                                                            "idpersone": "1",
-                                                                            "name": "DMITRIY",
-                                                                            "country_id": "1",
-                                                                            "country_id2": "compose_pk",
-                                                                            "persone_idpersone": null,
-                                                                            "man": "1"
-                                                                        },
-                                                                        "references": {
-                                                                            "country": [],
-                                                                            "persone": []
-                                                                        },
-                                                                        "referenced_by": []
-                                                                    }
-                                                                ]
+                                                                "source1:house": [],
+                                                                "source1:persone": []
                                                             },
                                                             "referenced_by": []
                                                         }
@@ -130,18 +113,18 @@
                                                     "street_idstreet": "1"
                                                 },
                                                 "references": {
-                                                    "street": []
+                                                    "source1:street": []
                                                 },
                                                 "referenced_by": {
-                                                    "persone_has_house": [
+                                                    "source1:persone_has_house": [
                                                         {
                                                             "record": {
                                                                 "persone_idpersone": "2",
                                                                 "house_idhouse": "3"
                                                             },
                                                             "references": {
-                                                                "house": [],
-                                                                "persone": [
+                                                                "source1:house": [],
+                                                                "source1:persone": [
                                                                     {
                                                                         "record": {
                                                                             "idpersone": "2",
@@ -152,24 +135,8 @@
                                                                             "man": "0"
                                                                         },
                                                                         "references": {
-                                                                            "country": [],
-                                                                            "persone": [
-                                                                                {
-                                                                                    "record": {
-                                                                                        "idpersone": "1",
-                                                                                        "name": "DMITRIY",
-                                                                                        "country_id": "1",
-                                                                                        "country_id2": "compose_pk",
-                                                                                        "persone_idpersone": null,
-                                                                                        "man": "1"
-                                                                                    },
-                                                                                    "references": {
-                                                                                        "country": [],
-                                                                                        "persone": []
-                                                                                    },
-                                                                                    "referenced_by": []
-                                                                                }
-                                                                            ]
+                                                                            "source1:country": [],
+                                                                            "source1:persone": []
                                                                         },
                                                                         "referenced_by": []
                                                                     }
@@ -187,50 +154,18 @@
                                                     "street_idstreet": "1"
                                                 },
                                                 "references": {
-                                                    "street": []
+                                                    "source1:street": []
                                                 },
                                                 "referenced_by": {
-                                                    "persone_has_house": [
+                                                    "source1:persone_has_house": [
                                                         {
                                                             "record": {
                                                                 "persone_idpersone": "2",
                                                                 "house_idhouse": "4"
                                                             },
                                                             "references": {
-                                                                "house": [],
-                                                                "persone": [
-                                                                    {
-                                                                        "record": {
-                                                                            "idpersone": "2",
-                                                                            "name": "ALICE",
-                                                                            "country_id": "1",
-                                                                            "country_id2": "compose_pk",
-                                                                            "persone_idpersone": "1",
-                                                                            "man": "0"
-                                                                        },
-                                                                        "references": {
-                                                                            "country": [],
-                                                                            "persone": [
-                                                                                {
-                                                                                    "record": {
-                                                                                        "idpersone": "1",
-                                                                                        "name": "DMITRIY",
-                                                                                        "country_id": "1",
-                                                                                        "country_id2": "compose_pk",
-                                                                                        "persone_idpersone": null,
-                                                                                        "man": "1"
-                                                                                    },
-                                                                                    "references": {
-                                                                                        "country": [],
-                                                                                        "persone": []
-                                                                                    },
-                                                                                    "referenced_by": []
-                                                                                }
-                                                                            ]
-                                                                        },
-                                                                        "referenced_by": []
-                                                                    }
-                                                                ]
+                                                                "source1:house": [],
+                                                                "source1:persone": []
                                                             },
                                                             "referenced_by": []
                                                         },
@@ -240,8 +175,8 @@
                                                                 "house_idhouse": "4"
                                                             },
                                                             "references": {
-                                                                "house": [],
-                                                                "persone": [
+                                                                "source1:house": [],
+                                                                "source1:persone": [
                                                                     {
                                                                         "record": {
                                                                             "idpersone": "3",
@@ -252,7 +187,7 @@
                                                                             "man": "0"
                                                                         },
                                                                         "references": {
-                                                                            "country": [
+                                                                            "source1:country": [
                                                                                 {
                                                                                     "record": {
                                                                                         "id": "2",
@@ -266,39 +201,7 @@
                                                                                     "referenced_by": []
                                                                                 }
                                                                             ],
-                                                                            "persone": [
-                                                                                {
-                                                                                    "record": {
-                                                                                        "idpersone": "2",
-                                                                                        "name": "ALICE",
-                                                                                        "country_id": "1",
-                                                                                        "country_id2": "compose_pk",
-                                                                                        "persone_idpersone": "1",
-                                                                                        "man": "0"
-                                                                                    },
-                                                                                    "references": {
-                                                                                        "country": [],
-                                                                                        "persone": [
-                                                                                            {
-                                                                                                "record": {
-                                                                                                    "idpersone": "1",
-                                                                                                    "name": "DMITRIY",
-                                                                                                    "country_id": "1",
-                                                                                                    "country_id2": "compose_pk",
-                                                                                                    "persone_idpersone": null,
-                                                                                                    "man": "1"
-                                                                                                },
-                                                                                                "references": {
-                                                                                                    "country": [],
-                                                                                                    "persone": []
-                                                                                                },
-                                                                                                "referenced_by": []
-                                                                                            }
-                                                                                        ]
-                                                                                    },
-                                                                                    "referenced_by": []
-                                                                                }
-                                                                            ]
+                                                                            "source1:persone": []
                                                                         },
                                                                         "referenced_by": []
                                                                     }
@@ -312,8 +215,8 @@
                                                                 "house_idhouse": "4"
                                                             },
                                                             "references": {
-                                                                "house": [],
-                                                                "persone": [
+                                                                "source1:house": [],
+                                                                "source1:persone": [
                                                                     {
                                                                         "record": {
                                                                             "idpersone": "4",
@@ -324,7 +227,7 @@
                                                                             "man": "1"
                                                                         },
                                                                         "references": {
-                                                                            "country": [
+                                                                            "source1:country": [
                                                                                 {
                                                                                     "record": {
                                                                                         "id": "3",
@@ -337,8 +240,7 @@
                                                                                     "references": [],
                                                                                     "referenced_by": []
                                                                                 }
-                                                                            ],
-                                                                            "persone": []
+                                                                            ]
                                                                         },
                                                                         "referenced_by": []
                                                                     }
@@ -362,11 +264,11 @@
                                         "country_id2": "compose_pk"
                                     },
                                     "references": {
-                                        "country": [],
-                                        "city": []
+                                        "source1:country": [],
+                                        "source1:city": []
                                     },
                                     "referenced_by": {
-                                        "house": [
+                                        "source1:house": [
                                             {
                                                 "record": {
                                                     "idhouse": "5",
@@ -374,18 +276,18 @@
                                                     "street_idstreet": "2"
                                                 },
                                                 "references": {
-                                                    "street": []
+                                                    "source1:street": []
                                                 },
                                                 "referenced_by": {
-                                                    "persone_has_house": [
+                                                    "source1:persone_has_house": [
                                                         {
                                                             "record": {
                                                                 "persone_idpersone": "5",
                                                                 "house_idhouse": "5"
                                                             },
                                                             "references": {
-                                                                "house": [],
-                                                                "persone": [
+                                                                "source1:house": [],
+                                                                "source1:persone": [
                                                                     {
                                                                         "record": {
                                                                             "idpersone": "5",
@@ -396,37 +298,8 @@
                                                                             "man": "0"
                                                                         },
                                                                         "references": {
-                                                                            "country": [
-                                                                                {
-                                                                                    "record": {
-                                                                                        "id": "3",
-                                                                                        "id2": "compose_pk",
-                                                                                        "name": "Spain",
-                                                                                        "population": "8",
-                                                                                        "created": "2015-04-20 03:34:25",
-                                                                                        "code": "3.3"
-                                                                                    },
-                                                                                    "references": [],
-                                                                                    "referenced_by": []
-                                                                                }
-                                                                            ],
-                                                                            "persone": [
-                                                                                {
-                                                                                    "record": {
-                                                                                        "idpersone": "4",
-                                                                                        "name": "BOB",
-                                                                                        "country_id": "3",
-                                                                                        "country_id2": "compose_pk",
-                                                                                        "persone_idpersone": null,
-                                                                                        "man": "1"
-                                                                                    },
-                                                                                    "references": {
-                                                                                        "country": [],
-                                                                                        "persone": []
-                                                                                    },
-                                                                                    "referenced_by": []
-                                                                                }
-                                                                            ]
+                                                                            "source1:country": [],
+                                                                            "source1:persone": []
                                                                         },
                                                                         "referenced_by": []
                                                                     }
@@ -444,50 +317,18 @@
                                                     "street_idstreet": "2"
                                                 },
                                                 "references": {
-                                                    "street": []
+                                                    "source1:street": []
                                                 },
                                                 "referenced_by": {
-                                                    "persone_has_house": [
+                                                    "source1:persone_has_house": [
                                                         {
                                                             "record": {
                                                                 "persone_idpersone": "2",
                                                                 "house_idhouse": "6"
                                                             },
                                                             "references": {
-                                                                "house": [],
-                                                                "persone": [
-                                                                    {
-                                                                        "record": {
-                                                                            "idpersone": "2",
-                                                                            "name": "ALICE",
-                                                                            "country_id": "1",
-                                                                            "country_id2": "compose_pk",
-                                                                            "persone_idpersone": "1",
-                                                                            "man": "0"
-                                                                        },
-                                                                        "references": {
-                                                                            "country": [],
-                                                                            "persone": [
-                                                                                {
-                                                                                    "record": {
-                                                                                        "idpersone": "1",
-                                                                                        "name": "DMITRIY",
-                                                                                        "country_id": "1",
-                                                                                        "country_id2": "compose_pk",
-                                                                                        "persone_idpersone": null,
-                                                                                        "man": "1"
-                                                                                    },
-                                                                                    "references": {
-                                                                                        "country": [],
-                                                                                        "persone": []
-                                                                                    },
-                                                                                    "referenced_by": []
-                                                                                }
-                                                                            ]
-                                                                        },
-                                                                        "referenced_by": []
-                                                                    }
-                                                                ]
+                                                                "source1:house": [],
+                                                                "source1:persone": []
                                                             },
                                                             "referenced_by": []
                                                         },
@@ -497,53 +338,8 @@
                                                                 "house_idhouse": "6"
                                                             },
                                                             "references": {
-                                                                "house": [],
-                                                                "persone": [
-                                                                    {
-                                                                        "record": {
-                                                                            "idpersone": "5",
-                                                                            "name": "BOBBY",
-                                                                            "country_id": "3",
-                                                                            "country_id2": "compose_pk",
-                                                                            "persone_idpersone": "4",
-                                                                            "man": "0"
-                                                                        },
-                                                                        "references": {
-                                                                            "country": [
-                                                                                {
-                                                                                    "record": {
-                                                                                        "id": "3",
-                                                                                        "id2": "compose_pk",
-                                                                                        "name": "Spain",
-                                                                                        "population": "8",
-                                                                                        "created": "2015-04-20 03:34:25",
-                                                                                        "code": "3.3"
-                                                                                    },
-                                                                                    "references": [],
-                                                                                    "referenced_by": []
-                                                                                }
-                                                                            ],
-                                                                            "persone": [
-                                                                                {
-                                                                                    "record": {
-                                                                                        "idpersone": "4",
-                                                                                        "name": "BOB",
-                                                                                        "country_id": "3",
-                                                                                        "country_id2": "compose_pk",
-                                                                                        "persone_idpersone": null,
-                                                                                        "man": "1"
-                                                                                    },
-                                                                                    "references": {
-                                                                                        "country": [],
-                                                                                        "persone": []
-                                                                                    },
-                                                                                    "referenced_by": []
-                                                                                }
-                                                                            ]
-                                                                        },
-                                                                        "referenced_by": []
-                                                                    }
-                                                                ]
+                                                                "source1:house": [],
+                                                                "source1:persone": []
                                                             },
                                                             "referenced_by": []
                                                         }
@@ -566,327 +362,15 @@
                             "country_id2": "compose_pk"
                         },
                         "references": {
-                            "country": []
+                            "source1:country": []
                         },
                         "referenced_by": {
-                            "street": []
+                            "source1:street": []
                         }
                     }
                 ],
-                "persone": [
-                    {
-                        "record": {
-                            "idpersone": "1",
-                            "name": "DMITRIY",
-                            "country_id": "1",
-                            "country_id2": "compose_pk",
-                            "persone_idpersone": null,
-                            "man": "1"
-                        },
-                        "references": {
-                            "country": [],
-                            "persone": []
-                        },
-                        "referenced_by": {
-                            "persone": [
-                                {
-                                    "record": {
-                                        "idpersone": "2",
-                                        "name": "ALICE",
-                                        "country_id": "1",
-                                        "country_id2": "compose_pk",
-                                        "persone_idpersone": "1",
-                                        "man": "0"
-                                    },
-                                    "references": {
-                                        "country": [],
-                                        "persone": []
-                                    },
-                                    "referenced_by": {
-                                        "persone": [
-                                            {
-                                                "record": {
-                                                    "idpersone": "3",
-                                                    "name": "KATE",
-                                                    "country_id": "2",
-                                                    "country_id2": "compose_pk",
-                                                    "persone_idpersone": "2",
-                                                    "man": "0"
-                                                },
-                                                "references": {
-                                                    "country": [
-                                                        {
-                                                            "record": {
-                                                                "id": "2",
-                                                                "id2": "compose_pk",
-                                                                "name": "USA",
-                                                                "population": "9",
-                                                                "created": "2015-04-20 03:34:07",
-                                                                "code": "2.2"
-                                                            },
-                                                            "references": [],
-                                                            "referenced_by": []
-                                                        }
-                                                    ],
-                                                    "persone": []
-                                                },
-                                                "referenced_by": {
-                                                    "persone": [],
-                                                    "persone_has_car": [
-                                                        {
-                                                            "record": {
-                                                                "persone_idpersone": "3",
-                                                                "car_idcar": "4"
-                                                            },
-                                                            "references": {
-                                                                "car": [
-                                                                    {
-                                                                        "record": {
-                                                                            "idcar": "4",
-                                                                            "carcol": "Renault"
-                                                                        },
-                                                                        "references": [],
-                                                                        "referenced_by": []
-                                                                    }
-                                                                ],
-                                                                "persone": []
-                                                            },
-                                                            "referenced_by": []
-                                                        }
-                                                    ],
-                                                    "persone_has_house": [
-                                                        {
-                                                            "record": {
-                                                                "persone_idpersone": "3",
-                                                                "house_idhouse": "9"
-                                                            },
-                                                            "references": {
-                                                                "house": [
-                                                                    {
-                                                                        "record": {
-                                                                            "idhouse": "9",
-                                                                            "number": "5",
-                                                                            "street_idstreet": "5"
-                                                                        },
-                                                                        "references": {
-                                                                            "street": [
-                                                                                {
-                                                                                    "record": {
-                                                                                        "idstreet": "5",
-                                                                                        "name": "FOO STREET",
-                                                                                        "code": "M",
-                                                                                        "city_idcity": "2",
-                                                                                        "country_id": "2",
-                                                                                        "country_id2": "compose_pk"
-                                                                                    },
-                                                                                    "references": {
-                                                                                        "country": [
-                                                                                            {
-                                                                                                "record": {
-                                                                                                    "id": "2",
-                                                                                                    "id2": "compose_pk",
-                                                                                                    "name": "USA",
-                                                                                                    "population": "9",
-                                                                                                    "created": "2015-04-20 03:34:07",
-                                                                                                    "code": "2.2"
-                                                                                                },
-                                                                                                "references": [],
-                                                                                                "referenced_by": []
-                                                                                            }
-                                                                                        ],
-                                                                                        "city": [
-                                                                                            {
-                                                                                                "record": {
-                                                                                                    "idcity": "2",
-                                                                                                    "name": "New York",
-                                                                                                    "code": "NY",
-                                                                                                    "population": "9",
-                                                                                                    "country_id": "2",
-                                                                                                    "country_id2": "compose_pk"
-                                                                                                },
-                                                                                                "references": {
-                                                                                                    "country": []
-                                                                                                },
-                                                                                                "referenced_by": []
-                                                                                            }
-                                                                                        ]
-                                                                                    },
-                                                                                    "referenced_by": []
-                                                                                }
-                                                                            ]
-                                                                        },
-                                                                        "referenced_by": []
-                                                                    }
-                                                                ],
-                                                                "persone": []
-                                                            },
-                                                            "referenced_by": []
-                                                        }
-                                                    ]
-                                                }
-                                            }
-                                        ],
-                                        "persone_has_car": [
-                                            {
-                                                "record": {
-                                                    "persone_idpersone": "2",
-                                                    "car_idcar": "3"
-                                                },
-                                                "references": {
-                                                    "car": [
-                                                        {
-                                                            "record": {
-                                                                "idcar": "3",
-                                                                "carcol": "Juke"
-                                                            },
-                                                            "references": [],
-                                                            "referenced_by": []
-                                                        }
-                                                    ],
-                                                    "persone": []
-                                                },
-                                                "referenced_by": []
-                                            },
-                                            {
-                                                "record": {
-                                                    "persone_idpersone": "2",
-                                                    "car_idcar": "4"
-                                                },
-                                                "references": {
-                                                    "car": [
-                                                        {
-                                                            "record": {
-                                                                "idcar": "4",
-                                                                "carcol": "Renault"
-                                                            },
-                                                            "references": [],
-                                                            "referenced_by": []
-                                                        }
-                                                    ],
-                                                    "persone": []
-                                                },
-                                                "referenced_by": []
-                                            }
-                                        ],
-                                        "persone_has_house": [
-                                            {
-                                                "record": {
-                                                    "persone_idpersone": "2",
-                                                    "house_idhouse": "8"
-                                                },
-                                                "references": {
-                                                    "house": [
-                                                        {
-                                                            "record": {
-                                                                "idhouse": "8",
-                                                                "number": "AA",
-                                                                "street_idstreet": "3"
-                                                            },
-                                                            "references": {
-                                                                "street": [
-                                                                    {
-                                                                        "record": {
-                                                                            "idstreet": "3",
-                                                                            "name": "MAINSTREET",
-                                                                            "code": "MS",
-                                                                            "city_idcity": "2",
-                                                                            "country_id": "2",
-                                                                            "country_id2": "compose_pk"
-                                                                        },
-                                                                        "references": {
-                                                                            "country": [
-                                                                                {
-                                                                                    "record": {
-                                                                                        "id": "2",
-                                                                                        "id2": "compose_pk",
-                                                                                        "name": "USA",
-                                                                                        "population": "9",
-                                                                                        "created": "2015-04-20 03:34:07",
-                                                                                        "code": "2.2"
-                                                                                    },
-                                                                                    "references": [],
-                                                                                    "referenced_by": []
-                                                                                }
-                                                                            ],
-                                                                            "city": [
-                                                                                {
-                                                                                    "record": {
-                                                                                        "idcity": "2",
-                                                                                        "name": "New York",
-                                                                                        "code": "NY",
-                                                                                        "population": "9",
-                                                                                        "country_id": "2",
-                                                                                        "country_id2": "compose_pk"
-                                                                                    },
-                                                                                    "references": {
-                                                                                        "country": []
-                                                                                    },
-                                                                                    "referenced_by": []
-                                                                                }
-                                                                            ]
-                                                                        },
-                                                                        "referenced_by": []
-                                                                    }
-                                                                ]
-                                                            },
-                                                            "referenced_by": []
-                                                        }
-                                                    ],
-                                                    "persone": []
-                                                },
-                                                "referenced_by": []
-                                            }
-                                        ]
-                                    }
-                                }
-                            ],
-                            "persone_has_car": [
-                                {
-                                    "record": {
-                                        "persone_idpersone": "1",
-                                        "car_idcar": "1"
-                                    },
-                                    "references": {
-                                        "car": [
-                                            {
-                                                "record": {
-                                                    "idcar": "1",
-                                                    "carcol": "Fiat"
-                                                },
-                                                "references": [],
-                                                "referenced_by": []
-                                            }
-                                        ],
-                                        "persone": []
-                                    },
-                                    "referenced_by": []
-                                },
-                                {
-                                    "record": {
-                                        "persone_idpersone": "1",
-                                        "car_idcar": "2"
-                                    },
-                                    "references": {
-                                        "car": [
-                                            {
-                                                "record": {
-                                                    "idcar": "2",
-                                                    "carcol": "Mercedes"
-                                                },
-                                                "references": [],
-                                                "referenced_by": []
-                                            }
-                                        ],
-                                        "persone": []
-                                    },
-                                    "referenced_by": []
-                                }
-                            ],
-                            "persone_has_house": []
-                        }
-                    }
-                ],
-                "street": []
+                "source1:persone": [],
+                "source1:street": []
             }
         }
     ],
@@ -902,7 +386,7 @@
             },
             "references": [],
             "referenced_by": {
-                "city": [
+                "source1:city": [
                     {
                         "record": {
                             "idcity": "2",
@@ -913,10 +397,10 @@
                             "country_id2": "compose_pk"
                         },
                         "references": {
-                            "country": []
+                            "source1:country": []
                         },
                         "referenced_by": {
-                            "street": [
+                            "source1:street": [
                                 {
                                     "record": {
                                         "idstreet": "3",
@@ -927,11 +411,11 @@
                                         "country_id2": "compose_pk"
                                     },
                                     "references": {
-                                        "country": [],
-                                        "city": []
+                                        "source1:country": [],
+                                        "source1:city": []
                                     },
                                     "referenced_by": {
-                                        "house": [
+                                        "source1:house": [
                                             {
                                                 "record": {
                                                     "idhouse": "7",
@@ -939,10 +423,10 @@
                                                     "street_idstreet": "3"
                                                 },
                                                 "references": {
-                                                    "street": []
+                                                    "source1:street": []
                                                 },
                                                 "referenced_by": {
-                                                    "persone_has_house": []
+                                                    "source1:persone_has_house": []
                                                 }
                                             },
                                             {
@@ -952,18 +436,18 @@
                                                     "street_idstreet": "3"
                                                 },
                                                 "references": {
-                                                    "street": []
+                                                    "source1:street": []
                                                 },
                                                 "referenced_by": {
-                                                    "persone_has_house": [
+                                                    "source1:persone_has_house": [
                                                         {
                                                             "record": {
                                                                 "persone_idpersone": "2",
                                                                 "house_idhouse": "8"
                                                             },
                                                             "references": {
-                                                                "house": [],
-                                                                "persone": [
+                                                                "source1:house": [],
+                                                                "source1:persone": [
                                                                     {
                                                                         "record": {
                                                                             "idpersone": "2",
@@ -974,7 +458,7 @@
                                                                             "man": "0"
                                                                         },
                                                                         "references": {
-                                                                            "country": [
+                                                                            "source1:country": [
                                                                                 {
                                                                                     "record": {
                                                                                         "id": "1",
@@ -988,7 +472,7 @@
                                                                                     "referenced_by": []
                                                                                 }
                                                                             ],
-                                                                            "persone": [
+                                                                            "source1:persone": [
                                                                                 {
                                                                                     "record": {
                                                                                         "idpersone": "1",
@@ -999,8 +483,7 @@
                                                                                         "man": "1"
                                                                                     },
                                                                                     "references": {
-                                                                                        "country": [],
-                                                                                        "persone": []
+                                                                                        "source1:country": []
                                                                                     },
                                                                                     "referenced_by": []
                                                                                 }
@@ -1028,11 +511,11 @@
                                         "country_id2": "compose_pk"
                                     },
                                     "references": {
-                                        "country": [],
-                                        "city": []
+                                        "source1:country": [],
+                                        "source1:city": []
                                     },
                                     "referenced_by": {
-                                        "house": []
+                                        "source1:house": []
                                     }
                                 },
                                 {
@@ -1045,11 +528,11 @@
                                         "country_id2": "compose_pk"
                                     },
                                     "references": {
-                                        "country": [],
-                                        "city": []
+                                        "source1:country": [],
+                                        "source1:city": []
                                     },
                                     "referenced_by": {
-                                        "house": [
+                                        "source1:house": [
                                             {
                                                 "record": {
                                                     "idhouse": "9",
@@ -1057,18 +540,18 @@
                                                     "street_idstreet": "5"
                                                 },
                                                 "references": {
-                                                    "street": []
+                                                    "source1:street": []
                                                 },
                                                 "referenced_by": {
-                                                    "persone_has_house": [
+                                                    "source1:persone_has_house": [
                                                         {
                                                             "record": {
                                                                 "persone_idpersone": "3",
                                                                 "house_idhouse": "9"
                                                             },
                                                             "references": {
-                                                                "house": [],
-                                                                "persone": [
+                                                                "source1:house": [],
+                                                                "source1:persone": [
                                                                     {
                                                                         "record": {
                                                                             "idpersone": "3",
@@ -1079,53 +562,8 @@
                                                                             "man": "0"
                                                                         },
                                                                         "references": {
-                                                                            "country": [],
-                                                                            "persone": [
-                                                                                {
-                                                                                    "record": {
-                                                                                        "idpersone": "2",
-                                                                                        "name": "ALICE",
-                                                                                        "country_id": "1",
-                                                                                        "country_id2": "compose_pk",
-                                                                                        "persone_idpersone": "1",
-                                                                                        "man": "0"
-                                                                                    },
-                                                                                    "references": {
-                                                                                        "country": [
-                                                                                            {
-                                                                                                "record": {
-                                                                                                    "id": "1",
-                                                                                                    "id2": "compose_pk",
-                                                                                                    "name": "Russia",
-                                                                                                    "population": "10",
-                                                                                                    "created": "2015-04-20 03:33:50",
-                                                                                                    "code": "1.1"
-                                                                                                },
-                                                                                                "references": [],
-                                                                                                "referenced_by": []
-                                                                                            }
-                                                                                        ],
-                                                                                        "persone": [
-                                                                                            {
-                                                                                                "record": {
-                                                                                                    "idpersone": "1",
-                                                                                                    "name": "DMITRIY",
-                                                                                                    "country_id": "1",
-                                                                                                    "country_id2": "compose_pk",
-                                                                                                    "persone_idpersone": null,
-                                                                                                    "man": "1"
-                                                                                                },
-                                                                                                "references": {
-                                                                                                    "country": [],
-                                                                                                    "persone": []
-                                                                                                },
-                                                                                                "referenced_by": []
-                                                                                            }
-                                                                                        ]
-                                                                                    },
-                                                                                    "referenced_by": []
-                                                                                }
-                                                                            ]
+                                                                            "source1:country": [],
+                                                                            "source1:persone": []
                                                                         },
                                                                         "referenced_by": []
                                                                     }
@@ -1139,8 +577,8 @@
                                                                 "house_idhouse": "9"
                                                             },
                                                             "references": {
-                                                                "house": [],
-                                                                "persone": [
+                                                                "source1:house": [],
+                                                                "source1:persone": [
                                                                     {
                                                                         "record": {
                                                                             "idpersone": "4",
@@ -1151,7 +589,7 @@
                                                                             "man": "1"
                                                                         },
                                                                         "references": {
-                                                                            "country": [
+                                                                            "source1:country": [
                                                                                 {
                                                                                     "record": {
                                                                                         "id": "3",
@@ -1164,8 +602,7 @@
                                                                                     "references": [],
                                                                                     "referenced_by": []
                                                                                 }
-                                                                            ],
-                                                                            "persone": []
+                                                                            ]
                                                                         },
                                                                         "referenced_by": []
                                                                     }
@@ -1179,8 +616,8 @@
                                                                 "house_idhouse": "9"
                                                             },
                                                             "references": {
-                                                                "house": [],
-                                                                "persone": [
+                                                                "source1:house": [],
+                                                                "source1:persone": [
                                                                     {
                                                                         "record": {
                                                                             "idpersone": "5",
@@ -1191,37 +628,8 @@
                                                                             "man": "0"
                                                                         },
                                                                         "references": {
-                                                                            "country": [
-                                                                                {
-                                                                                    "record": {
-                                                                                        "id": "3",
-                                                                                        "id2": "compose_pk",
-                                                                                        "name": "Spain",
-                                                                                        "population": "8",
-                                                                                        "created": "2015-04-20 03:34:25",
-                                                                                        "code": "3.3"
-                                                                                    },
-                                                                                    "references": [],
-                                                                                    "referenced_by": []
-                                                                                }
-                                                                            ],
-                                                                            "persone": [
-                                                                                {
-                                                                                    "record": {
-                                                                                        "idpersone": "4",
-                                                                                        "name": "BOB",
-                                                                                        "country_id": "3",
-                                                                                        "country_id2": "compose_pk",
-                                                                                        "persone_idpersone": null,
-                                                                                        "man": "1"
-                                                                                    },
-                                                                                    "references": {
-                                                                                        "country": [],
-                                                                                        "persone": []
-                                                                                    },
-                                                                                    "referenced_by": []
-                                                                                }
-                                                                            ]
+                                                                            "source1:country": [],
+                                                                            "source1:persone": []
                                                                         },
                                                                         "referenced_by": []
                                                                     }
@@ -1239,162 +647,8 @@
                         }
                     }
                 ],
-                "persone": [
-                    {
-                        "record": {
-                            "idpersone": "3",
-                            "name": "KATE",
-                            "country_id": "2",
-                            "country_id2": "compose_pk",
-                            "persone_idpersone": "2",
-                            "man": "0"
-                        },
-                        "references": {
-                            "country": [],
-                            "persone": [
-                                {
-                                    "record": {
-                                        "idpersone": "2",
-                                        "name": "ALICE",
-                                        "country_id": "1",
-                                        "country_id2": "compose_pk",
-                                        "persone_idpersone": "1",
-                                        "man": "0"
-                                    },
-                                    "references": {
-                                        "country": [
-                                            {
-                                                "record": {
-                                                    "id": "1",
-                                                    "id2": "compose_pk",
-                                                    "name": "Russia",
-                                                    "population": "10",
-                                                    "created": "2015-04-20 03:33:50",
-                                                    "code": "1.1"
-                                                },
-                                                "references": [],
-                                                "referenced_by": []
-                                            }
-                                        ],
-                                        "persone": [
-                                            {
-                                                "record": {
-                                                    "idpersone": "1",
-                                                    "name": "DMITRIY",
-                                                    "country_id": "1",
-                                                    "country_id2": "compose_pk",
-                                                    "persone_idpersone": null,
-                                                    "man": "1"
-                                                },
-                                                "references": {
-                                                    "country": [],
-                                                    "persone": []
-                                                },
-                                                "referenced_by": []
-                                            }
-                                        ]
-                                    },
-                                    "referenced_by": []
-                                }
-                            ]
-                        },
-                        "referenced_by": {
-                            "persone": [],
-                            "persone_has_car": [
-                                {
-                                    "record": {
-                                        "persone_idpersone": "3",
-                                        "car_idcar": "4"
-                                    },
-                                    "references": {
-                                        "car": [
-                                            {
-                                                "record": {
-                                                    "idcar": "4",
-                                                    "carcol": "Renault"
-                                                },
-                                                "references": [],
-                                                "referenced_by": []
-                                            }
-                                        ],
-                                        "persone": []
-                                    },
-                                    "referenced_by": []
-                                }
-                            ],
-                            "persone_has_house": [
-                                {
-                                    "record": {
-                                        "persone_idpersone": "3",
-                                        "house_idhouse": "4"
-                                    },
-                                    "references": {
-                                        "house": [
-                                            {
-                                                "record": {
-                                                    "idhouse": "4",
-                                                    "number": "5",
-                                                    "street_idstreet": "1"
-                                                },
-                                                "references": {
-                                                    "street": [
-                                                        {
-                                                            "record": {
-                                                                "idstreet": "1",
-                                                                "name": "MIRA",
-                                                                "code": "M",
-                                                                "city_idcity": "1",
-                                                                "country_id": "1",
-                                                                "country_id2": "compose_pk"
-                                                            },
-                                                            "references": {
-                                                                "country": [
-                                                                    {
-                                                                        "record": {
-                                                                            "id": "1",
-                                                                            "id2": "compose_pk",
-                                                                            "name": "Russia",
-                                                                            "population": "10",
-                                                                            "created": "2015-04-20 03:33:50",
-                                                                            "code": "1.1"
-                                                                        },
-                                                                        "references": [],
-                                                                        "referenced_by": []
-                                                                    }
-                                                                ],
-                                                                "city": [
-                                                                    {
-                                                                        "record": {
-                                                                            "idcity": "1",
-                                                                            "name": "Moscow",
-                                                                            "code": "MSK",
-                                                                            "population": "10",
-                                                                            "country_id": "1",
-                                                                            "country_id2": "compose_pk"
-                                                                        },
-                                                                        "references": {
-                                                                            "country": []
-                                                                        },
-                                                                        "referenced_by": []
-                                                                    }
-                                                                ]
-                                                            },
-                                                            "referenced_by": []
-                                                        }
-                                                    ]
-                                                },
-                                                "referenced_by": []
-                                            }
-                                        ],
-                                        "persone": []
-                                    },
-                                    "referenced_by": []
-                                }
-                            ]
-                        }
-                    }
-                ],
-                "street": []
+                "source1:persone": [],
+                "source1:street": []
             }
         }
     ]

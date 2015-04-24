@@ -1,8 +1,0 @@
-@startuml
-persone "[country_id,country_id2]\n∞" ---* "[id,id2]\n1"  country
-persone "[persone_idpersone]\n∞" ---* "[idpersone]\n1"  persone
-persone_has_car "[car_idcar]\n∞" ---* "[idcar]\n1"  car
-persone_has_car "[persone_idpersone]\n∞" ---* "[idpersone]\n1"  persone
-persone_has_house "[house_idhouse]\n∞" ---* "[idhouse]\n1"  house
-persone_has_house "[persone_idpersone]\n∞" ---* "[idpersone]\n1"  persone
-@enduml

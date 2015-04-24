@@ -1,4 +1,4 @@
-# lazada-com/database_minifier
+# lazada/database-minifier
 
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.md)
 
@@ -6,7 +6,6 @@ Tool for copy records from one Mysql database to another with all dependencies.
 
 Additional features:
 
-* Build database UML (http://plantuml.com/)
 * Build array/json 2-level tree for representation database
 
 ## Install
@@ -19,28 +18,68 @@ Add information about new package in your `composer.json`
         ...
         {
           "type": "vcs",
-          "url": "https://github.com/lazada-com/database_minifier",
-          "name": "lazada-com/database_minifier"
+          "url": "git@gitlab.lzd.co:operations/database-minifier.git",
+          "name": "lazada/database-minifier"
         }
     ],
     
     "require-dev": {
-        "lazada-com/database_minifier": ">=0.0.1"
+        "paunin/database_minifier": ">=0.0.1"
     },
 
-## Usage (DatabaseMinifier)
+## Main ideas and conventions
+
+* Database minifier allows you to create dump files with `INSERT` queries for database with respect to references. That means you will be able to extract data from database and apply it on another one with the same structure.
+* All records which are referenced by rows you want to move will be copied as well as DB should keep consistency.
+* Optionally you can copy records which have references to target rows (`copyReferencedBy` option in all directives)
+* Minifier supports multi-source extraction. You can describe links between 2 separate databases and the script will extract data like they have foreign keys across two databases
+* For multi-source mode Minifier can dump `INSERT` queries into different files. By default all queries will be dumped in `stdout`
+
+As Minifier has multi-source mode each function accepts table names with namespaces only (e.g. `connection_name:tableA`), where namespace is a connection name you have in configuration for minifier.
+
+## Usage with config file
+
+* Copy `minifier.json.dist` to `minifier.json` and configure it:
+    * `connections` - sources you want to explore
+
+            {
+                "source1": {                    # use this name as namespace for tables in the connection
+                    "dbname": "%dbname%",
+                    "username": "%user%",
+                    "password": "%pwd%",
+                    "host": "%host%",
+                    "driver": "mysql",            # only mysql is supported
+                    "out_file": "php://stdout",   # any file for dumping SQL for this connection
+                }/* , ... * /
+            }
+
+    * `relations` - links between different sources/databases or inside one.
+
+            {
+                "%table%": [
+                    "references": [
+                        "%table%": [
+                            ["%fk%": "%pk%" /* , ... * /]
+                            /* , ... * /
+                        ] /* , ... * /
+                    ],
+                ] /* , ... * /
+            }
+* Add more `directives` in array format `["method": "%method%", "arguments": [%arg1%, %arg2%, ... ]]`
+* Run command `php run-minifier.php [%config_json%]` where `config_json` file with configurations (`minifier.json` by default)
+
+
+## Usage in PHP code
 
 Create new object:
 
-    $dm = new \Lazada\DatabaseMinifier\DatabaseMinifier($masterConfig, $slaveConfig);
+    $dm = new \Paunin\DatabaseMinifier\DatabaseMinifier($connections, );
     
-Where configs in format
-    
-    array('dbname' => {DBNAME}, 'username' => {USERNAME}, 'password'=> {PASSWORD}, 'host' => {HOST}[, 'driver_options' => {options}])
+Where `$connections` and `$relations` are options in format described for json config.
 
-### DatabaseMinifier::buildArrayTree()
+### DatabaseMinifier::buildArrayTree() (only for PHP)
 
-You can build your database tree and use it in your purposes in format 
+You can build your database tree and use it in your purposes
 
     [
         "%table%": [
@@ -62,54 +101,27 @@ You can build your database tree and use it in your purposes in format
 
 Returns Json object like `DatabaseMinifier::buildArrayTree()`
 
+### copyRecordsByCriteria($tableName, array $criteria = [], $copyReferencedBy = true, $limit = 0)
 
-### copyRecordsByCriteria($tableName, array $criteria = [], $copyReferencedBy = true, $skipExists = false)
+Copy all records (with all dependencies) from master `db` to salve.
 
-Copy all records (with all dependencies) from master `db` to salve. If `$copyReferencedBy` is `true` it will also copy 
-all records depends on found records. If `skipExists` is true tool will not try copy exists records in `slave` db
+* `$tableName` - table name with namespace (e.g. `connection_name:table_name`)
+* `$copyReferencedBy` - if is `true` it will also copy all records depend on found records.
+* `$limit` - can be integer or string in format `{LIMIT}, {OFFSET}`
 
-### copyRecordsByPks($tableName, array $pks = [])
+### copyRecordsByPk($tableName, $pk, $copyReferencedBy = true)
 
-See `DatabaseMinifier::copyRecordsByCriteria` 
+* `$tableName` - table name with namespace (e.g. `connection_name:table_name`)
+* `$pk` - primary key value or array of value for complex primary keys
+* `$copyReferencedBy` - if is `true` it will also copy all records depend on found.
 
-### copyRecordsByPks($tableName, $pk)
+### copyRecordsByPks($tableName, array $pks = [], $copyReferencedBy = true)
 
-See `DatabaseMinifier::copyRecordsByPks`
-See `DatabaseMinifier::copyRecordsByCriteria`
-
-### buildPlantuml($tables = [], $references = true, $referenced = true)
-
-Build text-based uml for DB
-
-See http://plantuml.com/
-
-#### Examples:  
-
-![Plantuml - Country from test database ](./doc/persone.png)
-
-![Plantuml - Persons from test database  ](./doc/country.png)
-
+* `$tableName` - table name with namespace (e.g. `connection_name:table_name`)
+* `$pks` - array of primary keys for function `copyRecordsByPk`
+* `$copyReferencedBy` - if is `true` it will also copy all records depend on found records.
 
 ## Testing
 
-* Create databases for tests: e.g. `test_master` AND `test_slave`
-* Install master dump `mysql -uroot test_master < tests/_data/master_dump.sql`
-* Copy structure from master database to slave 
-    *  `mysqldump -uroot test_master --add-drop-table --no-data --verbose --result-file=/tmp/slave_dump.sql`
-    * `mysql -uroot test_slave < /tmp/slave_dump.sql`
-* Copy `tests/BaseTest.php.dist` to `tests/BaseTest.php` and configure it - set your databases coordinates 
-* Copy `phpunit.xml.dist` to `phpunit.xml`
-* Run tests `phpunit -c phpunit.xml`
-
-## Contributing
-
-Please see [CONTRIBUTING](./CONTRIBUTING.md) for details.
-
-## Credits
-
-- [Dmitriy Paunin](https://github.com/paunin)
-- [Ruben Ribeiro](https://github.com/rmribeiro)
-
-## License
-
-The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
+* Start environment with docker-compose `docker-compose build`
+* And run tests `docker-compose run application ./vendor/phpunit/phpunit/phpunit`

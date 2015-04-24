@@ -1,0 +1,32 @@
+application:
+  build: images/php
+  working_dir: /var/www/minifier
+  links:
+    - mysqlin
+    - mysqlin2
+  volumes:
+    - .:/var/www/minifier
+
+mysqlin:
+  build: images/mysql
+  ports:
+    - '3306:3306'
+  environment:
+    MYSQL_ROOT_PASSWORD: minifier
+    MYSQL_DATABASE: minifierin
+    MYSQL_USER: minifier
+    MYSQL_PASSWORD: minifier
+  volumes:
+    - ./images/mysql/data/source1:/docker-entrypoint-initdb.d
+
+mysqlin2:
+  build: images/mysql
+  ports:
+    - '3307:3306'
+  environment:
+    MYSQL_ROOT_PASSWORD: minifier2
+    MYSQL_DATABASE: minifierin2
+    MYSQL_USER: minifier2
+    MYSQL_PASSWORD: minifier2
+  volumes:
+    - ./images/mysql/data/source1:/docker-entrypoint-initdb.d

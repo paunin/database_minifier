@@ -1,26 +1,17 @@
 <?php
 
-namespace Lazada\DatabaseMinifier\Test;
+namespace Paunin\DatabaseMinifier\Test;
 
-use Lazada\DatabaseMinifier\DatabaseMinifier;
+use Paunin\DatabaseMinifier\DatabaseMinifier;
 
 /**
  * Class DatabaseMinifierTest
  *
- * @package Lazada\DatabaseMinifier\Test
+ * @package Paunin\DatabaseMinifier\Test
  */
 class DatabaseMinifierTest extends BaseTest
 {
-
-    /**
-     * @return \Lazada\DatabaseMinifier\DatabaseMinifier
-     */
-    protected function getDm()
-    {
-        $dm = new DatabaseMinifier($this->getConfigMaster(), $this->getConfigSlave());
-
-        return $dm;
-    }
+    const RESULT_DIR = __DIR__ . '/_data/results/';
 
     /**
      *  return array
@@ -29,28 +20,31 @@ class DatabaseMinifierTest extends BaseTest
     {
         return [
             [
-                'country',
+                'source1:country',
                 [[1, 'compose_pk'], [2, 'compose_pk']],
-                'copy_country_1_2.json'
+                'copy_country_1_2.json',
+                'copy_country_1_2.sql'
             ],
             [
-                'country',
+                'source1:country',
                 [[1, 'compose_pk']],
-                'copy_country_1.json'
+                'copy_country_1.json',
+                'copy_country_1.sql'
             ],
             [
-                'persone',
+                'source1:persone',
                 [[1]],
-                'copy_persone_1.json'
+                'copy_persone_1.json',
+                'copy_persone_1.sql'
             ],
             [
-                'persone',
+                'source1:persone',
                 [5],
-                'copy_persone_5.json'
+                'copy_persone_5.json',
+                'copy_persone_5.sql'
             ]
         ];
     }
-
 
     /**
      * @param $tables
@@ -59,10 +53,87 @@ class DatabaseMinifierTest extends BaseTest
      *
      * @dataProvider copyRecordsByPksProvider
      */
-    public function testCopyRecordsByPks($tables, $pks, $expectedResultFile)
+    public function testCopyRecordsByPks($tables, $pks, $expectedResultFile, $expectedSqlFile)
     {
-        $result = $this->getDm()->copyRecordsByPks($tables, $pks);
-        static::assertEquals($this->getFileContent($expectedResultFile), json_encode($result, JSON_PRETTY_PRINT));
+        $result = $this->getDm()
+                       ->setHandler('source1', fopen(self::RESULT_DIR . $expectedSqlFile . '.actual', 'w'))
+                       ->copyRecordsByPks($tables, $pks);
+        $res    = json_encode($result, JSON_PRETTY_PRINT);
+        $this->putFileContent($expectedResultFile . '.actual', $res);
+        static::assertEquals($this->getFileContent($expectedResultFile), $res);
+        static::assertEquals(
+            $this->getFileContent($expectedSqlFile),
+            $this->getFileContent($expectedSqlFile . '.actual')
+        );
+    }
+
+    public function copyRecordsByCriteriaProvider()
+    {
+        return [
+            [
+                'source1:country',
+                ['id' => 1],
+                'copy_country_id1.json',
+                'copy_country_id1.sql'
+            ],
+            [
+                'source1:country',
+                ['id' => ['value' => 1, 'operator' => '<=']],
+                'copy_country_id_le_1.json',
+                'copy_country_id_le_1.sql'
+            ],
+            [
+                'source1:country',
+                ['id' => ['value' => 1, 'operator' => '>=']],
+                'copy_country_id_ge_1.json',
+                'copy_country_id_ge_1.sql'
+            ],
+            [
+                'source1:country',
+                ['id' => ['value' => '%1%', 'operator' => 'LIKE']],
+                'copy_country_id_like_1.json',
+                'copy_country_id_like_1.sql'
+            ],
+            [
+                'source1:country',
+                ['id' => ['value' => '%DONT%', 'operator' => 'LIKE']],
+                'copy_country_id_like_dont.json',
+                'copy_country_id_like_dont.sql'
+            ],
+            [
+                'source1:country',
+                'id LIKE "%DONT%"',
+                'copy_country_str_id_like_dont.json',
+                'copy_country_str_id_like_dont.sql'
+            ],
+            [
+                'source1:country',
+                'id LIKE "%1%"',
+                'copy_country_str_id_like_1.json',
+                'copy_country_str_id_like_1.sql'
+            ],
+        ];
+    }
+
+    /**
+     * @param $tableName
+     * @param $criteria
+     * @param $expectedResultFile
+     *
+     * @dataProvider copyRecordsByCriteriaProvider
+     */
+    public function testCopyRecordsByCriteria($tableName, $criteria, $expectedResultFile, $expectedSqlFile)
+    {
+        $result = $this->getDm()
+                       ->setHandler('source1', fopen(self::RESULT_DIR . $expectedSqlFile . '.actual', 'w'))
+                       ->copyRecordsByCriteria($tableName, $criteria);
+        $res    = json_encode($result, JSON_PRETTY_PRINT);
+        $this->putFileContent($expectedResultFile . '.actual', $res);
+        static::assertEquals($this->getFileContent($expectedResultFile), $res);
+        static::assertEquals(
+            $this->getFileContent($expectedSqlFile),
+            $this->getFileContent($expectedSqlFile . '.actual')
+        );
     }
 
     /**
@@ -71,8 +142,8 @@ class DatabaseMinifierTest extends BaseTest
     public function copyRecordsCriteriaProvider()
     {
         return [
-            ['country'],
-            ['car']
+            ['source1:country'],
+            ['source1:car']
         ];
     }
 
@@ -83,44 +154,34 @@ class DatabaseMinifierTest extends BaseTest
      */
     public function testCopyRecordsCriteria($table)
     {
-        $this->getDm()->copyRecordsByCriteria($table);
-        // we have all records now in slave DB
-        $result = $this->getDm()->copyRecordsByCriteria($table, [], true, true);
-        static::assertEquals('[]', json_encode($result, JSON_PRETTY_PRINT));
+        $result = $this->getDm()
+                       ->copyRecordsByCriteria($table, [], true, true);
+        static::assertNotEquals('[]', $result);
     }
 
     /**
      * @return array
      */
-    public function buildPlantumlProvider()
+    public function copyRecordsCriteriaLimitProvider()
     {
         return [
-            [[], 'null.puml'],
-            ['country', 'country.puml'],
-            ['persone', 'persone.puml']
+            ['source1:car']
         ];
     }
 
     /**
      * @param $table
-     * @param $resultFile
      *
-     * @dataProvider buildPlantumlProvider
+     * @dataProvider copyRecordsCriteriaLimitProvider
      */
-    public function testBuildPlantuml($table, $resultFile)
+    public function testCopyRecordsCriteriaLimit($table)
     {
-        $result   = $this->getDm()->buildPlantuml($table);
-        $expected = $this->getFileContent($resultFile);
-
-        static::assertEquals($expected, $result);
-    }
-
-    /**
-     * @expectedException \Lazada\DatabaseMinifier\Exception\DatabaseMinifierException
-     */
-    public function testBuildPlantumlException()
-    {
-        $this->getDm()->buildPlantuml('WHATEVER' . rand(1, 1000));
+        $this->getDm()
+             ->copyRecordsByCriteria($table, [], true, 1);
+        // we have not all records in slave DB
+        $result = $this->getDm()
+                       ->copyRecordsByCriteria($table, [], true, true);
+        static::assertNotEquals('[]', json_encode($result, JSON_PRETTY_PRINT));
     }
 
     /**
@@ -128,10 +189,22 @@ class DatabaseMinifierTest extends BaseTest
      */
     public function testBuildJsonTree()
     {
-        $json = $this->getDm()->buildJsonTree();
-        static::assertEquals($this->getFileContent('tree.json'), $json);
+        $dm = $this->getDm();
+
+        $result = $dm->buildJsonTree();
+
+        static::assertEquals($this->getFileContent('tree.json'), $result);
     }
 
+    /**
+     * @return \Paunin\DatabaseMinifier\DatabaseMinifier
+     */
+    protected function getDm()
+    {
+        $dm = new DatabaseMinifier($this->getConfigOneConnection());
+
+        return $dm;
+    }
 
     /**
      * @param $resultFile
@@ -140,6 +213,17 @@ class DatabaseMinifierTest extends BaseTest
      */
     protected function getFileContent($resultFile)
     {
-        return file_get_contents(realpath(__DIR__ . '/_data/results/' . $resultFile));
+        return file_get_contents(realpath(self::RESULT_DIR . $resultFile));
+    }
+
+    /**
+     * @param $resultFile
+     * @param $content
+     *
+     * @return int
+     */
+    protected function putFileContent($resultFile, $content)
+    {
+        return file_put_contents(self::RESULT_DIR . $resultFile, $content);
     }
 }

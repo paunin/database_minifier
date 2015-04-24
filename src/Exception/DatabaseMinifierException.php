@@ -1,11 +1,11 @@
 <?php
 
-namespace Lazada\DatabaseMinifier\Exception;
+namespace Paunin\DatabaseMinifier\Exception;
 
 /**
  * Class DatabaseMinifierException
  *
- * @package Lazada\DatabaseMinifier\Exception
+ * @package Paunin\DatabaseMinifier\Exception
  */
 class DatabaseMinifierException extends \Exception
 {

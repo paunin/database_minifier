@@ -68,6 +68,30 @@ class DatabaseMinifierTest extends BaseTest
     /**
      * @return array
      */
+    public function copyRecordsCriteriaProvider()
+    {
+        return [
+            ['country'],
+            ['car']
+        ];
+    }
+
+    /**
+     * @param $table
+     *
+     * @dataProvider copyRecordsCriteriaProvider
+     */
+    public function testCopyRecordsCriteria($table)
+    {
+        $this->getDm()->copyRecordsByCriteria($table);
+        // we have all records now in slave DB
+        $result = $this->getDm()->copyRecordsByCriteria($table, [], true, true);
+        static::assertEquals('[]', json_encode($result, JSON_PRETTY_PRINT));
+    }
+
+    /**
+     * @return array
+     */
     public function buildPlantumlProvider()
     {
         return [

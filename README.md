@@ -63,10 +63,10 @@ You can build your database tree and use it in your purposes in format
 Returns Json object like `DatabaseMinifier::buildArrayTree()`
 
 
-### copyRecordsByCriteria($tableName, array $criteria = [], $copyReferencedBy = true)
+### copyRecordsByCriteria($tableName, array $criteria = [], $copyReferencedBy = true, $skipExists = false)
 
 Copy all records (with all dependencies) from master `db` to salve. If `$copyReferencedBy` is `true` it will also copy 
-all records depends on found records. 
+all records depends on found records. If `skipExists` is true tool will not try copy exists records in `slave` db
 
 ### copyRecordsByPks($tableName, array $pks = [])
 

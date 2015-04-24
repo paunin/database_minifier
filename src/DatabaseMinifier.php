@@ -298,14 +298,19 @@ class DatabaseMinifier
      * @param string $tableName
      * @param array  $criteria         ['%field%'=>'%value%' /* , ... * /]
      * @param bool   $copyReferencedBy if we need referenced records
+     * @param bool   $skipExists       don't copy records in slave DB force
      *
      * @return array
      */
-    public function copyRecordsByCriteria($tableName, array $criteria = [], $copyReferencedBy = true)
-    {
+    public function copyRecordsByCriteria(
+        $tableName,
+        array $criteria = [],
+        $copyReferencedBy = true,
+        $skipExists = false
+    ) {
         $this->setCopied([]);
 
-        return $this->copyRecordsByCriteriaInternal($tableName, $criteria, $copyReferencedBy);
+        return $this->copyRecordsByCriteriaInternal($tableName, $criteria, $copyReferencedBy, $skipExists);
     }
 
     /**
@@ -464,12 +469,16 @@ class DatabaseMinifier
     /**
      * @param string $tableName
      * @param array  $row
+     * @param bool   $skipExists
      *
      * @return array
      * @throws DatabaseMinifierException
      */
-    protected function copyReferences($tableName, array $row)
-    {
+    protected function copyReferences(
+        $tableName,
+        array $row,
+        $skipExists = false
+    ) {
         $result = [];
         $table  = $this->getTable($tableName);
         foreach ($table['references'] as $table => $refs) {
@@ -478,7 +487,7 @@ class DatabaseMinifier
                 foreach ($links as $fk => $pk) {
                     $criteria[$pk] = $row[$fk];
                 }
-                $result[$table] = $this->copyRecordsByCriteriaInternal($table, $criteria, false);
+                $result[$table] = $this->copyRecordsByCriteriaInternal($table, $criteria, false, $skipExists);
             }
         }
 
@@ -489,12 +498,17 @@ class DatabaseMinifier
      * @param string $tableName
      * @param array  $row
      * @param bool   $copyReferencedBy
+     * @param bool   $skipExists
      *
      * @return array
      * @throws DatabaseMinifierException
      */
-    protected function copyReferencedBy($tableName, array $row, $copyReferencedBy = true)
-    {
+    protected function copyReferencedBy(
+        $tableName,
+        array $row,
+        $copyReferencedBy = true,
+        $skipExists = false
+    ) {
         $result = [];
         $table  = $this->getTable($tableName);
         foreach ($table['referenced_by'] as $table => $refs) {
@@ -503,7 +517,12 @@ class DatabaseMinifier
                 foreach ($links as $fk => $pk) {
                     $criteria[$fk] = $row[$pk];
                 }
-                $result[$table] = $this->copyRecordsByCriteriaInternal($table, $criteria, $copyReferencedBy);
+                $result[$table] = $this->copyRecordsByCriteriaInternal(
+                    $table,
+                    $criteria,
+                    $copyReferencedBy,
+                    $skipExists
+                );
             }
         }
 
@@ -683,24 +702,33 @@ SQL;
     /**
      * @param       $tableName
      * @param array $criteria
-     * @param       $copyReferencedBy
+     * @param bool  $copyReferencedBy
+     * @param bool  $skipExists
      *
      * @return array
      */
-    protected function copyRecordsByCriteriaInternal($tableName, array $criteria, $copyReferencedBy)
-    {
+    protected function copyRecordsByCriteriaInternal(
+        $tableName,
+        array $criteria = [],
+        $copyReferencedBy = true,
+        $skipExists = false
+    ) {
         $results    = [];
         $conditions = [];
         foreach (array_keys($criteria) as $key) {
             $conditions[] = "$key = :$key";
         }
 
-        $sql   = "SELECT * FROM {$tableName} WHERE " . (implode(' AND ', $conditions));
+        $sql   = "SELECT * FROM {$tableName}" . (count($conditions) ? (' WHERE ' . implode(' AND ', $conditions)) : '');
         $query = $this->getMasterPdo()->prepare($sql);
 
         $query->execute($criteria);
 
         while ($row = $query->fetch(\PDO::FETCH_ASSOC)) {
+
+            if ($skipExists && $this->checkIfRowExists($tableName, $row)) {
+                continue;
+            }
 
             // WE need to prevent situation when we will copy one row more than once. What for?
             $copied  = $this->getCopied();
@@ -716,7 +744,7 @@ SQL;
             ];
 
             //TODO: what if we have not existed references
-            $result['references'] = $this->copyReferences($tableName, $row);
+            $result['references'] = $this->copyReferences($tableName, $row, $skipExists);
 
             $this->pasteRow($tableName, $row);
 
@@ -724,13 +752,44 @@ SQL;
             $this->setCopied($copied);
 
             if ($copyReferencedBy) {
-                $result['referenced_by'] = $this->copyReferencedBy($tableName, $row, $copyReferencedBy);
+                $result['referenced_by'] = $this->copyReferencedBy($tableName, $row, $copyReferencedBy, $skipExists);
             }
             $result['record'] = $row;
             $results[]        = $result;
         }
 
         return $results;
+    }
+
+    /**
+     * @param       $tableName
+     * @param array $row
+     *
+     * @return bool
+     * @throws DatabaseMinifierException
+     */
+    protected function checkIfRowExists($tableName, array $row)
+    {
+        $table = $this->getTable($tableName);
+
+        if (!count($table['primary_key'])) {
+            throw new DatabaseMinifierException('Impossible to check if row exists in table without primary key');
+        }
+
+        $criteria   = [];
+        $conditions = [];
+        foreach ($table['primary_key'] as $field) {
+            $token            = ":{$field}_token";
+            $criteria[$token] = $row[$field];
+            $conditions[]     = "$field = $token";
+        }
+
+        $sql = "SELECT * FROM $tableName WHERE " . implode(' AND ', $conditions) . " LIMIT 1";
+
+        $query  = $this->getSlavePdo()->prepare($sql);
+        $result = $query->execute($criteria);
+
+        return (bool)$query->rowCount();
     }
 
 }

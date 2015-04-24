@@ -687,7 +687,7 @@ SQL;
      *
      * @return array
      */
-    protected function copyRecordsByCriteriaInternal($tableName, array $criteria, $copyReferencedBy)
+    protected function copyRecordsByCriteriaInternal($tableName, array $criteria = [], $copyReferencedBy)
     {
         $results    = [];
         $conditions = [];
@@ -695,7 +695,7 @@ SQL;
             $conditions[] = "$key = :$key";
         }
 
-        $sql   = "SELECT * FROM {$tableName} WHERE " . (implode(' AND ', $conditions));
+        $sql   = "SELECT * FROM {$tableName}" . (count($conditions) ? (' WHERE ' . implode(' AND ', $conditions)) : '');
         $query = $this->getMasterPdo()->prepare($sql);
 
         $query->execute($criteria);

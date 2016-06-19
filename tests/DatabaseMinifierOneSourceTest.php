@@ -5,13 +5,54 @@ namespace Paunin\DatabaseMinifier\Test;
 use Paunin\DatabaseMinifier\DatabaseMinifier;
 
 /**
- * Class DatabaseMinifierTest
+ * Class DatabaseMinifierOneSourceTest
  *
  * @package Paunin\DatabaseMinifier\Test
  */
-class DatabaseMinifierTest extends BaseTest
+class DatabaseMinifierOneSourceTest extends BaseTest
 {
-    const RESULT_DIR = __DIR__ . '/_data/results/';
+    const RESULT_DIR = __DIR__ . '/_data/results/one_source/';
+
+
+    /**
+     * @return array
+     */
+    protected function getConfigOneConnection()
+    {
+        return
+            [
+                'source1' => [
+                    'dbname'         => 'minifierin',
+                    'username'       => 'minifier',
+                    'password'       => 'minifier',
+                    'host'           => 'mysqlin',
+                    'driver'         => 'mysql',
+                    'driver_options' => null,
+                ],
+            ];
+    }
+
+    /**
+     * @return \Paunin\DatabaseMinifier\DatabaseMinifier
+     */
+    protected function getDm()
+    {
+        $dm = new DatabaseMinifier($this->getConfigOneConnection());
+
+        return $dm;
+    }
+
+    /**
+     *
+     */
+    public function testBuildJsonTree()
+    {
+        $dm = $this->getDm();
+
+        $result = $dm->buildJsonTree();
+
+        static::assertEquals($this->getFileContent('tree.json'), $result);
+    }
 
     /**
      *  return array
@@ -182,48 +223,5 @@ class DatabaseMinifierTest extends BaseTest
         $result = $this->getDm()
                        ->copyRecordsByCriteria($table, [], true, true);
         static::assertNotEquals('[]', json_encode($result, JSON_PRETTY_PRINT));
-    }
-
-    /**
-     *
-     */
-    public function testBuildJsonTree()
-    {
-        $dm = $this->getDm();
-
-        $result = $dm->buildJsonTree();
-
-        static::assertEquals($this->getFileContent('tree.json'), $result);
-    }
-
-    /**
-     * @return \Paunin\DatabaseMinifier\DatabaseMinifier
-     */
-    protected function getDm()
-    {
-        $dm = new DatabaseMinifier($this->getConfigOneConnection());
-
-        return $dm;
-    }
-
-    /**
-     * @param $resultFile
-     *
-     * @return bool|mixed|string
-     */
-    protected function getFileContent($resultFile)
-    {
-        return file_get_contents(realpath(self::RESULT_DIR . $resultFile));
-    }
-
-    /**
-     * @param $resultFile
-     * @param $content
-     *
-     * @return int
-     */
-    protected function putFileContent($resultFile, $content)
-    {
-        return file_put_contents(self::RESULT_DIR . $resultFile, $content);
     }
 }

@@ -18,20 +18,23 @@ class BaseTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @return array
+     * @param $resultFile
+     *
+     * @return bool|mixed|string
      */
-    protected function getConfigOneConnection()
+    protected function getFileContent($resultFile)
     {
-        return
-            [
-                'source1' => [
-                    'dbname'         => 'minifierin',
-                    'username'       => 'minifier',
-                    'password'       => 'minifier',
-                    'host'           => 'mysqlin',
-                    'driver'         => 'mysql',
-                    'driver_options' => null,
-                ],
-            ];
+        return file_get_contents(realpath(static::RESULT_DIR . $resultFile));
+    }
+
+    /**
+     * @param $resultFile
+     * @param $content
+     *
+     * @return int
+     */
+    protected function putFileContent($resultFile, $content)
+    {
+        return file_put_contents(static::RESULT_DIR . $resultFile, $content);
     }
 }

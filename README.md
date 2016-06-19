@@ -1,4 +1,4 @@
-# lazada/database-minifier
+# Database minifier
 
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.md)
 
@@ -57,15 +57,14 @@ As Minifier has multi-source mode each function accepts table names with namespa
 
             {
                 "%table%": [
-                    "references": [
-                        "%table%": [
-                            ["%fk%": "%pk%" /* , ... * /]
-                            /* , ... * /
-                        ] /* , ... * /
-                    ],
-                ] /* , ... * /
+                    "%table%": [
+                        ["%fk%": "%pk%" /* , ... * /]   # keep in mind complex PKs
+                        /* , ... * /                    # if we have more then one reference to the same table
+                    ] /* , ... * /                      # more links to other tables
+                ]
+                /* , ... * /
             }
-* Add more `directives` in array format `["method": "%method%", "arguments": [%arg1%, %arg2%, ... ]]`
+* Add more `directives` in array format `["method": "%method%", "arguments": [%arg1%, %arg2%, ... ]]`. All directives described bellow.
 * Run command `php run-minifier.php [%config_json%]` where `config_json` file with configurations (`minifier.json` by default)
 
 
@@ -73,7 +72,7 @@ As Minifier has multi-source mode each function accepts table names with namespa
 
 Create new object:
 
-    $dm = new \Paunin\DatabaseMinifier\DatabaseMinifier($connections, );
+    $dm = new \Paunin\DatabaseMinifier\DatabaseMinifier($connections, $relations);
     
 Where `$connections` and `$relations` are options in format described for json config.
 
@@ -86,13 +85,15 @@ You can build your database tree and use it in your purposes
             "primary_key": ["%PK1%", "%PK2%" /* , ... * /],
             "references": [
                 "%table%": [
-                    ["%fk%": "%pk%" /* , ... * /] /* , ... * /
-                ] /* , ... * /
+                    ["%fk%": "%pk%" /* , ... * /]   # keep in mind complex PKs
+                    /* , ... * /                    # if we have more then one reference to the same table
+                ] /* , ... * /                      # more links to other tables
             ],
             "referenced_by": [
                 "%table%": [
-                    ["%fk%": "%pk%" /* , ... * /] /* , ... * /
-                ] /* , ... * /
+                    ["%fk%": "%pk%" /* , ... * /]   # keep in mind complex PKs
+                    /* , ... * /                    # if we have more then one reference to the same table
+                ] /* , ... * /                      # more links to other tables
             ]
         ] /* , ... * /
     ]

@@ -295,6 +295,10 @@ class DatabaseMinifier
             $tableName           = $this->addNamespaceToTable($connectionName, $row['TABLE_NAME']);
             $referencedTableName = $this->addNamespaceToTable($connectionName, $row['REFERENCED_TABLE_NAME']);
 
+            if (!array_key_exists($referencedTableName, $tables)) {
+                continue;
+            }
+
             if (!array_key_exists($referencedTableName, $tables[$tableName]['references'])) {
                 $tables[$tableName]['references'][$referencedTableName] = [];
             }

@@ -440,27 +440,7 @@ class DatabaseMinifier
      * @return array
      * @throws DatabaseMinifierException
      */
-    public function copyRecordsByCriteria(
-        $tableName,
-        $criteria = [],
-        $copyReferencedBy = true,
-        $limit = 0
-    ) {
-        $this->copied = [];
-
-        return $this->copyRecordsByCriteriaInternal($tableName, $criteria, $copyReferencedBy, $limit);
-    }
-
-    /**
-     * @param string       $tableName with namespace
-     * @param array|string $criteria
-     * @param bool|true    $copyReferencedBy
-     * @param int          $limit
-     *
-     * @return array
-     * @throws DatabaseMinifierException
-     */
-    protected function copyRecordsByCriteriaInternal(
+    protected function copyRecordsByCriteria(
         $tableName,
         $criteria = [],
         $copyReferencedBy = true,
@@ -623,7 +603,7 @@ class DatabaseMinifier
                     }
                 }
                 if (count($criteria)) {
-                    $result[$table] = $this->copyRecordsByCriteriaInternal($table, $criteria, false);
+                    $result[$table] = $this->copyRecordsByCriteria($table, $criteria, false);
                 }
             }
         }
@@ -718,7 +698,7 @@ class DatabaseMinifier
                 foreach ($links as $fk => $pk) {
                     $criteria[$fk] = $row[$pk];
                 }
-                $result[$table] = $this->copyRecordsByCriteriaInternal(
+                $result[$table] = $this->copyRecordsByCriteria(
                     $table,
                     $criteria,
                     $copyReferencedBy

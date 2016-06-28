@@ -594,7 +594,7 @@ class DatabaseMinifier
     ) {
         $result = [];
         $table  = $this->getTable($tableName);
-        foreach ($table['references'] as $table => $refs) {
+        foreach ($table['references'] as $refTable => $refs) {
             foreach ($refs as $links) {
                 $criteria = [];
                 foreach ($links as $fk => $pk) {
@@ -603,7 +603,7 @@ class DatabaseMinifier
                     }
                 }
                 if (count($criteria)) {
-                    $result[$table] = $this->copyRecordsByCriteria($table, $criteria, false);
+                    $result[$refTable] = $this->copyRecordsByCriteria($refTable, $criteria, false);
                 }
             }
         }

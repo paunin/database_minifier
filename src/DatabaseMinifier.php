@@ -444,7 +444,7 @@ class DatabaseMinifier
      * @return array
      * @throws DatabaseMinifierException
      */
-    protected function copyRecordsByCriteria(
+    public function copyRecordsByCriteria(
         $tableName,
         $criteria = [],
         $copyReferencedBy = true,

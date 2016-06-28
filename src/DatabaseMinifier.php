@@ -295,6 +295,10 @@ class DatabaseMinifier
             $tableName           = $this->addNamespaceToTable($connectionName, $row['TABLE_NAME']);
             $referencedTableName = $this->addNamespaceToTable($connectionName, $row['REFERENCED_TABLE_NAME']);
 
+            if (!array_key_exists($referencedTableName, $tables)) {
+                continue;
+            }
+
             if (!array_key_exists($referencedTableName, $tables[$tableName]['references'])) {
                 $tables[$tableName]['references'][$referencedTableName] = [];
             }
@@ -440,27 +444,7 @@ class DatabaseMinifier
      * @return array
      * @throws DatabaseMinifierException
      */
-    public function copyRecordsByCriteria(
-        $tableName,
-        $criteria = [],
-        $copyReferencedBy = true,
-        $limit = 0
-    ) {
-        $this->copied = [];
-
-        return $this->copyRecordsByCriteriaInternal($tableName, $criteria, $copyReferencedBy, $limit);
-    }
-
-    /**
-     * @param string       $tableName with namespace
-     * @param array|string $criteria
-     * @param bool|true    $copyReferencedBy
-     * @param int          $limit
-     *
-     * @return array
-     * @throws DatabaseMinifierException
-     */
-    protected function copyRecordsByCriteriaInternal(
+    protected function copyRecordsByCriteria(
         $tableName,
         $criteria = [],
         $copyReferencedBy = true,
@@ -614,7 +598,7 @@ class DatabaseMinifier
     ) {
         $result = [];
         $table  = $this->getTable($tableName);
-        foreach ($table['references'] as $table => $refs) {
+        foreach ($table['references'] as $refTable => $refs) {
             foreach ($refs as $links) {
                 $criteria = [];
                 foreach ($links as $fk => $pk) {
@@ -623,7 +607,7 @@ class DatabaseMinifier
                     }
                 }
                 if (count($criteria)) {
-                    $result[$table] = $this->copyRecordsByCriteriaInternal($table, $criteria, false);
+                    $result[$refTable] = $this->copyRecordsByCriteria($refTable, $criteria, false);
                 }
             }
         }
@@ -718,7 +702,7 @@ class DatabaseMinifier
                 foreach ($links as $fk => $pk) {
                     $criteria[$fk] = $row[$pk];
                 }
-                $result[$table] = $this->copyRecordsByCriteriaInternal(
+                $result[$table] = $this->copyRecordsByCriteria(
                     $table,
                     $criteria,
                     $copyReferencedBy

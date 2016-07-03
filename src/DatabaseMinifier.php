@@ -492,8 +492,11 @@ class DatabaseMinifier
         $query->execute($params);
 
         while ($row = $query->fetch(\PDO::FETCH_ASSOC)) {
-
-            if ($this->checkIfRowCopied($tableName, $row)) {
+            // if row has been copied with ReferencedBy
+            // or we don't need ReferencedBy, but we have had any copy of this row
+            if ($this->checkIfRowCopied($tableName, $row, true)
+                || (!$copyReferencedBy && $this->checkIfRowCopied($tableName, $row))
+            ) {
                 continue;
             }
 
@@ -503,11 +506,14 @@ class DatabaseMinifier
                 'referenced_by' => [],
             ];
 
-            //TODO: what if we have not existed references
-            $result['references'] = $this->copyReferences($tableName, $row);
-
             if (!$this->checkIfRowCopied($tableName, $row)) {
-                $this->pasteRow($tableName, $row);
+                //TODO: what if we have not existed references
+                $result['references'] = $this->copyReferences($tableName, $row);
+
+                if (!$this->checkIfRowCopied($tableName, $row)) {
+                    $this->pasteRow($tableName, $row);
+                }
+                $this->markRowAsCopied($tableName, $row, $copyReferencedBy);
             }
 
             if ($copyReferencedBy) {
@@ -564,12 +570,17 @@ class DatabaseMinifier
     /**
      * @param string $tableName
      * @param array  $row
-     *
+     * @param boolean $withReferencedBy
      * @return bool
      */
-    protected function checkIfRowCopied($tableName, $row)
+    protected function checkIfRowCopied($tableName, $row, $withReferencedBy = false)
     {
-        return array_key_exists($this->makeRowHash($tableName, $row), $this->copied);
+        $hash = $this->makeRowHash($tableName, $row);
+        if ($withReferencedBy) {
+            return array_key_exists($hash, $this->copied) && 1 == $this->copied;
+        } else {
+            return array_key_exists($hash, $this->copied);
+        }
     }
 
     /**
@@ -641,7 +652,6 @@ class DatabaseMinifier
         );
 
         $result = (bool)fwrite($this->outHandlers[$this->getConnectionNameForTable($tableName)], $sql.PHP_EOL);
-        $this->markRowAsCopied($tableName, $row);
 
         return $result;
     }
@@ -671,12 +681,13 @@ class DatabaseMinifier
     /**
      * @param string $tableName
      * @param array  $row
+     * @param boolean $withReferencedBy
      *
      * @return mixed
      */
-    protected function markRowAsCopied($tableName, $row)
+    protected function markRowAsCopied($tableName, $row, $withReferencedBy)
     {
-        return $this->copied[$this->makeRowHash($tableName, $row)] = 1;
+        return $this->copied[$this->makeRowHash($tableName, $row)] = $withReferencedBy ? 1 : 0;
     }
 
     /**

@@ -431,14 +431,6 @@
                                                     {
                                                         "record": {
                                                             "persone_idpersone": "3",
-                                                            "house_idhouse": "4"
-                                                        },
-                                                        "references": [],
-                                                        "referenced_by": []
-                                                    },
-                                                    {
-                                                        "record": {
-                                                            "persone_idpersone": "3",
                                                             "house_idhouse": "9"
                                                         },
                                                         "references": {
@@ -531,30 +523,6 @@
                                         {
                                             "record": {
                                                 "persone_idpersone": "2",
-                                                "house_idhouse": "3"
-                                            },
-                                            "references": [],
-                                            "referenced_by": []
-                                        },
-                                        {
-                                            "record": {
-                                                "persone_idpersone": "2",
-                                                "house_idhouse": "4"
-                                            },
-                                            "references": [],
-                                            "referenced_by": []
-                                        },
-                                        {
-                                            "record": {
-                                                "persone_idpersone": "2",
-                                                "house_idhouse": "6"
-                                            },
-                                            "references": [],
-                                            "referenced_by": []
-                                        },
-                                        {
-                                            "record": {
-                                                "persone_idpersone": "2",
                                                 "house_idhouse": "8"
                                             },
                                             "references": {
@@ -637,24 +605,7 @@
                                 "referenced_by": []
                             }
                         ],
-                        "source1:persone_has_house": [
-                            {
-                                "record": {
-                                    "persone_idpersone": "1",
-                                    "house_idhouse": "1"
-                                },
-                                "references": [],
-                                "referenced_by": []
-                            },
-                            {
-                                "record": {
-                                    "persone_idpersone": "1",
-                                    "house_idhouse": "2"
-                                },
-                                "references": [],
-                                "referenced_by": []
-                            }
-                        ]
+                        "source1:persone_has_house": []
                     }
                 },
                 {
@@ -681,268 +632,17 @@
                                 "references": [],
                                 "referenced_by": {
                                     "source1:persone": [],
-                                    "source1:persone_has_car": [
-                                        {
-                                            "record": {
-                                                "persone_idpersone": "3",
-                                                "car_idcar": "4"
-                                            },
-                                            "references": [],
-                                            "referenced_by": []
-                                        }
-                                    ],
-                                    "source1:persone_has_house": [
-                                        {
-                                            "record": {
-                                                "persone_idpersone": "3",
-                                                "house_idhouse": "4"
-                                            },
-                                            "references": [],
-                                            "referenced_by": []
-                                        },
-                                        {
-                                            "record": {
-                                                "persone_idpersone": "3",
-                                                "house_idhouse": "9"
-                                            },
-                                            "references": [],
-                                            "referenced_by": []
-                                        }
-                                    ]
+                                    "source1:persone_has_car": [],
+                                    "source1:persone_has_house": []
                                 }
                             }
                         ],
-                        "source1:persone_has_car": [
-                            {
-                                "record": {
-                                    "persone_idpersone": "2",
-                                    "car_idcar": "3"
-                                },
-                                "references": [],
-                                "referenced_by": []
-                            },
-                            {
-                                "record": {
-                                    "persone_idpersone": "2",
-                                    "car_idcar": "4"
-                                },
-                                "references": [],
-                                "referenced_by": []
-                            }
-                        ],
-                        "source1:persone_has_house": [
-                            {
-                                "record": {
-                                    "persone_idpersone": "2",
-                                    "house_idhouse": "3"
-                                },
-                                "references": [],
-                                "referenced_by": []
-                            },
-                            {
-                                "record": {
-                                    "persone_idpersone": "2",
-                                    "house_idhouse": "4"
-                                },
-                                "references": [],
-                                "referenced_by": []
-                            },
-                            {
-                                "record": {
-                                    "persone_idpersone": "2",
-                                    "house_idhouse": "6"
-                                },
-                                "references": [],
-                                "referenced_by": []
-                            },
-                            {
-                                "record": {
-                                    "persone_idpersone": "2",
-                                    "house_idhouse": "8"
-                                },
-                                "references": [],
-                                "referenced_by": []
-                            }
-                        ]
+                        "source1:persone_has_car": [],
+                        "source1:persone_has_house": []
                     }
                 }
             ],
-            "source1:street": [
-                {
-                    "record": {
-                        "idstreet": "1",
-                        "name": "MIRA",
-                        "code": "M",
-                        "city_idcity": "1",
-                        "country_id": "1",
-                        "country_id2": "compose_pk"
-                    },
-                    "references": [],
-                    "referenced_by": {
-                        "source1:house": [
-                            {
-                                "record": {
-                                    "idhouse": "1",
-                                    "number": "1A",
-                                    "street_idstreet": "1"
-                                },
-                                "references": [],
-                                "referenced_by": {
-                                    "source1:persone_has_house": [
-                                        {
-                                            "record": {
-                                                "persone_idpersone": "1",
-                                                "house_idhouse": "1"
-                                            },
-                                            "references": [],
-                                            "referenced_by": []
-                                        }
-                                    ]
-                                }
-                            },
-                            {
-                                "record": {
-                                    "idhouse": "2",
-                                    "number": "1B",
-                                    "street_idstreet": "1"
-                                },
-                                "references": [],
-                                "referenced_by": {
-                                    "source1:persone_has_house": [
-                                        {
-                                            "record": {
-                                                "persone_idpersone": "1",
-                                                "house_idhouse": "2"
-                                            },
-                                            "references": [],
-                                            "referenced_by": []
-                                        }
-                                    ]
-                                }
-                            },
-                            {
-                                "record": {
-                                    "idhouse": "3",
-                                    "number": "2",
-                                    "street_idstreet": "1"
-                                },
-                                "references": [],
-                                "referenced_by": {
-                                    "source1:persone_has_house": [
-                                        {
-                                            "record": {
-                                                "persone_idpersone": "2",
-                                                "house_idhouse": "3"
-                                            },
-                                            "references": [],
-                                            "referenced_by": []
-                                        }
-                                    ]
-                                }
-                            },
-                            {
-                                "record": {
-                                    "idhouse": "4",
-                                    "number": "5",
-                                    "street_idstreet": "1"
-                                },
-                                "references": [],
-                                "referenced_by": {
-                                    "source1:persone_has_house": [
-                                        {
-                                            "record": {
-                                                "persone_idpersone": "2",
-                                                "house_idhouse": "4"
-                                            },
-                                            "references": [],
-                                            "referenced_by": []
-                                        },
-                                        {
-                                            "record": {
-                                                "persone_idpersone": "3",
-                                                "house_idhouse": "4"
-                                            },
-                                            "references": [],
-                                            "referenced_by": []
-                                        },
-                                        {
-                                            "record": {
-                                                "persone_idpersone": "4",
-                                                "house_idhouse": "4"
-                                            },
-                                            "references": [],
-                                            "referenced_by": []
-                                        }
-                                    ]
-                                }
-                            }
-                        ]
-                    }
-                },
-                {
-                    "record": {
-                        "idstreet": "2",
-                        "name": "LENINA",
-                        "code": "L",
-                        "city_idcity": "1",
-                        "country_id": "1",
-                        "country_id2": "compose_pk"
-                    },
-                    "references": [],
-                    "referenced_by": {
-                        "source1:house": [
-                            {
-                                "record": {
-                                    "idhouse": "5",
-                                    "number": "11",
-                                    "street_idstreet": "2"
-                                },
-                                "references": [],
-                                "referenced_by": {
-                                    "source1:persone_has_house": [
-                                        {
-                                            "record": {
-                                                "persone_idpersone": "5",
-                                                "house_idhouse": "5"
-                                            },
-                                            "references": [],
-                                            "referenced_by": []
-                                        }
-                                    ]
-                                }
-                            },
-                            {
-                                "record": {
-                                    "idhouse": "6",
-                                    "number": "12",
-                                    "street_idstreet": "2"
-                                },
-                                "references": [],
-                                "referenced_by": {
-                                    "source1:persone_has_house": [
-                                        {
-                                            "record": {
-                                                "persone_idpersone": "2",
-                                                "house_idhouse": "6"
-                                            },
-                                            "references": [],
-                                            "referenced_by": []
-                                        },
-                                        {
-                                            "record": {
-                                                "persone_idpersone": "5",
-                                                "house_idhouse": "6"
-                                            },
-                                            "references": [],
-                                            "referenced_by": []
-                                        }
-                                    ]
-                                }
-                            }
-                        ]
-                    }
-                }
-            ]
+            "source1:street": []
         }
     }
 ]

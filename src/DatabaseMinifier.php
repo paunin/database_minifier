@@ -509,10 +509,7 @@ class DatabaseMinifier
             if (!$this->checkIfRowCopied($tableName, $row)) {
                 //TODO: what if we have not existed references
                 $result['references'] = $this->copyReferences($tableName, $row);
-
-                if (!$this->checkIfRowCopied($tableName, $row)) {
-                    $this->pasteRow($tableName, $row);
-                }
+                $this->pasteRow($tableName, $row);
                 $this->markRowAsCopied($tableName, $row, $copyReferencedBy);
             }
 
@@ -577,7 +574,7 @@ class DatabaseMinifier
     {
         $hash = $this->makeRowHash($tableName, $row);
         if ($withReferencedBy) {
-            return array_key_exists($hash, $this->copied) && 1 == $this->copied;
+            return array_key_exists($hash, $this->copied) && 1 == $this->copied[$hash];
         } else {
             return array_key_exists($hash, $this->copied);
         }

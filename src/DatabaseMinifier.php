@@ -435,7 +435,8 @@ class DatabaseMinifier
      *
      * @param string       $tableName        with namespace
      * @param array|string $criteria         '{SQL EXPRESSION FOR `WHERE`}' OR
-     *                                       ['%field%'=>'%value%' /* , ... * /] OR
+     *                                       ['%field%' =>'%value%' /* , ... * /] OR
+     *                                       ['%field%' => ['%value1%', '%value2%', '%value3%'/*, ... * /] ] OR
      *                                       ['%field%' => ['value' =>'%value%', 'operator' => '%operator%' ] /* , ... * /]
      *                                       Where operator any SQL operator ( e.g. `>`, `<=`, `LIKE` )
      * @param bool         $copyReferencedBy if we need referenced records
@@ -457,18 +458,23 @@ class DatabaseMinifier
         if (is_array($criteria)) {
             foreach ($criteria as $key => $value) {
                 if (is_scalar($value)) {
-                    $conditions[] = "$key = :$key";
-                    $params[$key] = $value;
-                } elseif (is_array($value) && array_key_exists('value', $value) && array_key_exists(
-                        'operator',
-                        $value
-                    )
-                ) {
-                    $conditions[] = "$key {$value['operator']} :$key";
-                    $params[$key] = $value['value'];
+                    $conditions[] = "$key = ?";
+                    $params[] = $value;
+                } elseif (is_array($value)) {
+                    if (array_key_exists('value', $value) && array_key_exists('operator', $value)
+                    ) {
+                        // operator/value
+                        $conditions[] = "$key {$value['operator']} ?";
+                        $params[] = $value['value'];
+                    } else {
+                        // `in` operator
+                        $inParams = array_fill(0, count($value), '?');
+                        $conditions[] = "$key in (".implode(',', $inParams).")";
+                        $params = array_merge($params, array_values($value));
+                    }
                 } else {
                     throw new DatabaseMinifierException(
-                        'Unsupported type of criteria parameter. Should be array (with `value` and `operator` element) or scalar.'.
+                        'Unsupported type of criteria parameter. Should be array with values, array with `value` and `operator` element or scalar.'.
                         "\nCriteria was: \n".print_r($criteria, true)
                     );
                 }

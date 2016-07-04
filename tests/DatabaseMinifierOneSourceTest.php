@@ -153,6 +153,12 @@ class DatabaseMinifierOneSourceTest extends BaseTest
                 'copy_country_str_id_like_1.json',
                 'copy_country_str_id_like_1.sql'
             ],
+            [
+                'source1:country',
+                ['id' => [1, 2]],
+                'copy_country_id_in_1_2.json',
+                'copy_country_id_in_1_2.sql'
+            ],
         ];
     }
 

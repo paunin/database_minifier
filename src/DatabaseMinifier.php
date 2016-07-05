@@ -295,6 +295,10 @@ class DatabaseMinifier
             $tableName           = $this->addNamespaceToTable($connectionName, $row['TABLE_NAME']);
             $referencedTableName = $this->addNamespaceToTable($connectionName, $row['REFERENCED_TABLE_NAME']);
 
+            if (!array_key_exists($referencedTableName, $tables)) {
+                continue;
+            }
+
             if (!array_key_exists($referencedTableName, $tables[$tableName]['references'])) {
                 $tables[$tableName]['references'][$referencedTableName] = [];
             }
@@ -431,7 +435,8 @@ class DatabaseMinifier
      *
      * @param string       $tableName        with namespace
      * @param array|string $criteria         '{SQL EXPRESSION FOR `WHERE`}' OR
-     *                                       ['%field%'=>'%value%' /* , ... * /] OR
+     *                                       ['%field%' =>'%value%' /* , ... * /] OR
+     *                                       ['%field%' => ['%value1%', '%value2%', '%value3%'/*, ... * /] ] OR
      *                                       ['%field%' => ['value' =>'%value%', 'operator' => '%operator%' ] /* , ... * /]
      *                                       Where operator any SQL operator ( e.g. `>`, `<=`, `LIKE` )
      * @param bool         $copyReferencedBy if we need referenced records
@@ -446,26 +451,6 @@ class DatabaseMinifier
         $copyReferencedBy = true,
         $limit = 0
     ) {
-        $this->copied = [];
-
-        return $this->copyRecordsByCriteriaInternal($tableName, $criteria, $copyReferencedBy, $limit);
-    }
-
-    /**
-     * @param string       $tableName with namespace
-     * @param array|string $criteria
-     * @param bool|true    $copyReferencedBy
-     * @param int          $limit
-     *
-     * @return array
-     * @throws DatabaseMinifierException
-     */
-    protected function copyRecordsByCriteriaInternal(
-        $tableName,
-        $criteria = [],
-        $copyReferencedBy = true,
-        $limit = 0
-    ) {
         $results    = [];
         $conditions = [];
         $params     = [];
@@ -473,18 +458,23 @@ class DatabaseMinifier
         if (is_array($criteria)) {
             foreach ($criteria as $key => $value) {
                 if (is_scalar($value)) {
-                    $conditions[] = "$key = :$key";
-                    $params[$key] = $value;
-                } elseif (is_array($value) && array_key_exists('value', $value) && array_key_exists(
-                        'operator',
-                        $value
-                    )
-                ) {
-                    $conditions[] = "$key {$value['operator']} :$key";
-                    $params[$key] = $value['value'];
+                    $conditions[] = "$key = ?";
+                    $params[] = $value;
+                } elseif (is_array($value)) {
+                    if (array_key_exists('value', $value) && array_key_exists('operator', $value)
+                    ) {
+                        // operator/value
+                        $conditions[] = "$key {$value['operator']} ?";
+                        $params[] = $value['value'];
+                    } else {
+                        // `in` operator
+                        $inParams = array_fill(0, count($value), '?');
+                        $conditions[] = "$key in (".implode(',', $inParams).")";
+                        $params = array_merge($params, array_values($value));
+                    }
                 } else {
                     throw new DatabaseMinifierException(
-                        'Unsupported type of criteria parameter. Should be array (with `value` and `operator` element) or scalar.'.
+                        'Unsupported type of criteria parameter. Should be array with values, array with `value` and `operator` element or scalar.'.
                         "\nCriteria was: \n".print_r($criteria, true)
                     );
                 }
@@ -508,8 +498,11 @@ class DatabaseMinifier
         $query->execute($params);
 
         while ($row = $query->fetch(\PDO::FETCH_ASSOC)) {
-
-            if ($this->checkIfRowCopied($tableName, $row)) {
+            // if row has been copied with ReferencedBy
+            // or we don't need ReferencedBy, but we have had any copy of this row
+            if ($this->checkIfRowCopied($tableName, $row, true)
+                || (!$copyReferencedBy && $this->checkIfRowCopied($tableName, $row))
+            ) {
                 continue;
             }
 
@@ -519,11 +512,11 @@ class DatabaseMinifier
                 'referenced_by' => [],
             ];
 
-            //TODO: what if we have not existed references
-            $result['references'] = $this->copyReferences($tableName, $row);
-
             if (!$this->checkIfRowCopied($tableName, $row)) {
+                //TODO: what if we have not existed references
+                $result['references'] = $this->copyReferences($tableName, $row);
                 $this->pasteRow($tableName, $row);
+                $this->markRowAsCopied($tableName, $row, $copyReferencedBy);
             }
 
             if ($copyReferencedBy) {
@@ -580,12 +573,17 @@ class DatabaseMinifier
     /**
      * @param string $tableName
      * @param array  $row
-     *
+     * @param boolean $withReferencedBy
      * @return bool
      */
-    protected function checkIfRowCopied($tableName, $row)
+    protected function checkIfRowCopied($tableName, $row, $withReferencedBy = false)
     {
-        return array_key_exists($this->makeRowHash($tableName, $row), $this->copied);
+        $hash = $this->makeRowHash($tableName, $row);
+        if ($withReferencedBy) {
+            return array_key_exists($hash, $this->copied) && 1 == $this->copied[$hash];
+        } else {
+            return array_key_exists($hash, $this->copied);
+        }
     }
 
     /**
@@ -614,7 +612,7 @@ class DatabaseMinifier
     ) {
         $result = [];
         $table  = $this->getTable($tableName);
-        foreach ($table['references'] as $table => $refs) {
+        foreach ($table['references'] as $refTable => $refs) {
             foreach ($refs as $links) {
                 $criteria = [];
                 foreach ($links as $fk => $pk) {
@@ -623,7 +621,7 @@ class DatabaseMinifier
                     }
                 }
                 if (count($criteria)) {
-                    $result[$table] = $this->copyRecordsByCriteriaInternal($table, $criteria, false);
+                    $result[$refTable] = $this->copyRecordsByCriteria($refTable, $criteria, false);
                 }
             }
         }
@@ -657,7 +655,6 @@ class DatabaseMinifier
         );
 
         $result = (bool)fwrite($this->outHandlers[$this->getConnectionNameForTable($tableName)], $sql.PHP_EOL);
-        $this->markRowAsCopied($tableName, $row);
 
         return $result;
     }
@@ -687,12 +684,13 @@ class DatabaseMinifier
     /**
      * @param string $tableName
      * @param array  $row
+     * @param boolean $withReferencedBy
      *
      * @return mixed
      */
-    protected function markRowAsCopied($tableName, $row)
+    protected function markRowAsCopied($tableName, $row, $withReferencedBy)
     {
-        return $this->copied[$this->makeRowHash($tableName, $row)] = 1;
+        return $this->copied[$this->makeRowHash($tableName, $row)] = $withReferencedBy ? 1 : 0;
     }
 
     /**
@@ -718,7 +716,7 @@ class DatabaseMinifier
                 foreach ($links as $fk => $pk) {
                     $criteria[$fk] = $row[$pk];
                 }
-                $result[$table] = $this->copyRecordsByCriteriaInternal(
+                $result[$table] = $this->copyRecordsByCriteria(
                     $table,
                     $criteria,
                     $copyReferencedBy

@@ -710,14 +710,14 @@ class DatabaseMinifier
     ) {
         $result = [];
         $table  = $this->getTable($tableName);
-        foreach ($table['referenced_by'] as $table => $refs) {
+        foreach ($table['referenced_by'] as $refTable => $refs) {
             foreach ($refs as $links) {
                 $criteria = [];
                 foreach ($links as $fk => $pk) {
                     $criteria[$fk] = $row[$pk];
                 }
-                $result[$table] = $this->copyRecordsByCriteria(
-                    $table,
+                $result[$refTable] = $this->copyRecordsByCriteria(
+                    $refTable,
                     $criteria,
                     $copyReferencedBy
                 );

@@ -500,12 +500,9 @@ class DatabaseMinifier
         while ($row = $query->fetch(\PDO::FETCH_ASSOC)) {
             // if row has been copied with ReferencedBy
             // or we don't need ReferencedBy, but we have had any copy of this row
-            if ($this->checkIfRowCopied($tableName, $row, true)
-                || (!$copyReferencedBy && $this->checkIfRowCopied($tableName, $row))
-            ) {
+            if ($this->checkIfRowCopied($tableName, $row, $copyReferencedBy)) {
                 continue;
             }
-
             $result = [
                 'record'        => [],
                 'references'    => [],
@@ -571,15 +568,15 @@ class DatabaseMinifier
     }
 
     /**
-     * @param string $tableName
-     * @param array  $row
-     * @param boolean $withReferencedBy
+     * @param string  $tableName
+     * @param array   $row
+     * @param boolean $checkIfReferencedByAreCopiedToo
      * @return bool
      */
-    protected function checkIfRowCopied($tableName, $row, $withReferencedBy = false)
+    protected function checkIfRowCopied($tableName, $row, $checkIfReferencedByAreCopiedToo = false)
     {
         $hash = $this->makeRowHash($tableName, $row);
-        if ($withReferencedBy) {
+        if ($checkIfReferencedByAreCopiedToo) {
             return array_key_exists($hash, $this->copied) && 1 == $this->copied[$hash];
         } else {
             return array_key_exists($hash, $this->copied);

@@ -198,7 +198,7 @@ class DatabaseMinifier
     protected function getPks($connectionName)
     {
         $sql   = sprintf(
-            'SELECT TABLE_NAME as \'table\',  GROUP_CONCAT(DISTINCT COLUMN_NAME SEPARATOR \',\') AS  \'pk\'
+            'SELECT TABLE_NAME as \'table\',  GROUP_CONCAT(DISTINCT COLUMN_NAME ORDER BY ORDINAL_POSITION SEPARATOR \',\') AS  \'pk\'
              FROM COLUMNS
              WHERE (TABLE_SCHEMA = \'%s\') AND (COLUMN_KEY = \'PRI\')
              GROUP BY TABLE_NAME

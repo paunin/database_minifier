@@ -202,7 +202,9 @@ class DatabaseMinifierOneSourceTest extends BaseTest
     public function testCopyRecordsCriteria($table)
     {
         $result = $this->getDm()
-                       ->copyRecordsByCriteria($table, [], true, true);
+            ->setHandler('source1', fopen(($tempFile = tempnam(self::RESULT_DIR, 'tmp')), 'w'))
+            ->copyRecordsByCriteria($table, [], true, true);
+        unlink($tempFile);
         static::assertNotEquals('[]', $result);
     }
 
@@ -223,11 +225,15 @@ class DatabaseMinifierOneSourceTest extends BaseTest
      */
     public function testCopyRecordsCriteriaLimit($table)
     {
+        $fTmpHandler = fopen(($tempFile = tempnam(self::RESULT_DIR, 'tmp')), 'w');
         $this->getDm()
-             ->copyRecordsByCriteria($table, [], true, 1);
+            ->setHandler('source1', $fTmpHandler)
+            ->copyRecordsByCriteria($table, [], true, 1);
         // we have not all records in slave DB
         $result = $this->getDm()
-                       ->copyRecordsByCriteria($table, [], true, true);
+            ->setHandler('source1', $fTmpHandler)
+            ->copyRecordsByCriteria($table, [], true, true);
+        unlink($tempFile);
         static::assertNotEquals('[]', json_encode($result, JSON_PRETTY_PRINT));
     }
 }

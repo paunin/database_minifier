@@ -1,0 +1,3 @@
+INSERT INTO cycles_product (`idproduct`, `name`, `owner_id1`, `owner_id2`) VALUES ('2', 'DeployTool', '1', 'string1') ON DUPLICATE KEY UPDATE `idproduct` = '2',`name` = 'DeployTool',`owner_id1` = '1',`owner_id2` = 'string1';
+INSERT INTO cycles_team (`idteam1`, `idteam2`, `name`, `product_id`) VALUES ('1', 'string', 'Developers', '2') ON DUPLICATE KEY UPDATE `idteam1` = '1',`idteam2` = 'string',`name` = 'Developers',`product_id` = '2';
+INSERT INTO cycles_employee (`idemployee1`, `idemployee2`, `name`, `team_id1`, `team_id2`) VALUES ('1', 'string1', 'Jon', '1', 'string') ON DUPLICATE KEY UPDATE `idemployee1` = '1',`idemployee2` = 'string1',`name` = 'Jon',`team_id1` = '1',`team_id2` = 'string';

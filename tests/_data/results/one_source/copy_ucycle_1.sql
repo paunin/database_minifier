@@ -1,0 +1,3 @@
+INSERT INTO ucycles_department (`iddepartment`, `name`, `head_employee_no`) VALUES ('1', 'UserXP', 'XYZ123') ON DUPLICATE KEY UPDATE `iddepartment` = '1',`name` = 'UserXP',`head_employee_no` = 'XYZ123';
+INSERT INTO ucycles_software (`idsoftware`, `name`, `department_id`) VALUES ('1', 'User Tracker', '1') ON DUPLICATE KEY UPDATE `idsoftware` = '1',`name` = 'User Tracker',`department_id` = '1';
+INSERT INTO ucycles_developer (`iddeveloper`, `name`, `employee_no`, `software_id`) VALUES ('1', 'Jon', 'XYZ123', '1') ON DUPLICATE KEY UPDATE `iddeveloper` = '1',`name` = 'Jon',`employee_no` = 'XYZ123',`software_id` = '1';

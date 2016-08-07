@@ -35,9 +35,9 @@ class DatabaseMinifierOneSourceTest extends BaseTest
     /**
      * @return \Paunin\DatabaseMinifier\DatabaseMinifier
      */
-    protected function getDm()
+    protected function getDm($extraRelations = [])
     {
-        $dm = new DatabaseMinifier($this->getConfigOneConnection());
+        $dm = new DatabaseMinifier($this->getConfigOneConnection(), $extraRelations);
 
         return $dm;
     }
@@ -52,6 +52,27 @@ class DatabaseMinifierOneSourceTest extends BaseTest
         $result = $dm->buildJsonTree();
 
         static::assertEquals($this->getFileContent('tree.json'), $result);
+    }
+
+    /**
+     *
+     */
+    public function testExtraRelation()
+    {
+        $dm = $this->getDm([
+            'source1:office' => [
+                "source1:house" => [
+                    ["houseid" => "idhouse"]
+                ]
+            ],
+            'source1:company' => [
+                "source1:office" => [
+                    ["company_office_code" => "office_code"]
+                ]
+            ],
+        ]);
+        $result = $dm->buildJsonTree();
+        static::assertEquals($this->getFileContent('tree_extra.json'), $result);
     }
 
     /**
@@ -97,8 +118,8 @@ class DatabaseMinifierOneSourceTest extends BaseTest
     public function testCopyRecordsByPks($tables, $pks, $expectedResultFile, $expectedSqlFile)
     {
         $result = $this->getDm()
-                       ->setHandler('source1', fopen(self::RESULT_DIR . $expectedSqlFile . '.actual', 'w'))
-                       ->copyRecordsByPks($tables, $pks);
+            ->setHandler('source1', fopen(self::RESULT_DIR . $expectedSqlFile . '.actual', 'w'))
+            ->copyRecordsByPks($tables, $pks);
         $res    = json_encode($result, JSON_PRETTY_PRINT);
         $this->putFileContent($expectedResultFile . '.actual', $res);
         static::assertEquals($this->getFileContent($expectedResultFile), $res);
@@ -172,8 +193,8 @@ class DatabaseMinifierOneSourceTest extends BaseTest
     public function testCopyRecordsByCriteria($tableName, $criteria, $expectedResultFile, $expectedSqlFile)
     {
         $result = $this->getDm()
-                       ->setHandler('source1', fopen(self::RESULT_DIR . $expectedSqlFile . '.actual', 'w'))
-                       ->copyRecordsByCriteria($tableName, $criteria);
+            ->setHandler('source1', fopen(self::RESULT_DIR . $expectedSqlFile . '.actual', 'w'))
+            ->copyRecordsByCriteria($tableName, $criteria);
         $res    = json_encode($result, JSON_PRETTY_PRINT);
         $this->putFileContent($expectedResultFile . '.actual', $res);
         static::assertEquals($this->getFileContent($expectedResultFile), $res);
@@ -235,5 +256,72 @@ class DatabaseMinifierOneSourceTest extends BaseTest
             ->copyRecordsByCriteria($table, [], true, true);
         unlink($tempFile);
         static::assertNotEquals('[]', json_encode($result, JSON_PRETTY_PRINT));
+    }
+
+    /**
+     * @return array
+     */
+    public function copyCycles()
+    {
+        return [
+            [
+                'source1:cycles_employee',
+                [1, 'string1'],
+                'copy_cycle_1.json',
+                'copy_cycle_1.sql'
+            ]
+        ];
+    }
+
+    /**
+     * @param $table
+     *
+     * @dataProvider copyCycles
+     */
+    public function testCycles($tableName, $primaryKey, $expectedResultFile, $expectedSqlFile)
+    {
+        $result = $this->getDm()
+            ->setHandler('source1', fopen(self::RESULT_DIR . $expectedSqlFile . '.actual', 'w'))
+            ->copyRecordsByPk($tableName, $primaryKey, false);
+        $res    = json_encode($result, JSON_PRETTY_PRINT);
+        $this->putFileContent($expectedResultFile . '.actual', $res);
+        static::assertEquals($this->getFileContent($expectedResultFile), $res);
+        static::assertEquals(
+            $this->getFileContent($expectedSqlFile),
+            $this->getFileContent($expectedSqlFile . '.actual')
+        );
+    }
+    /**
+     * @return array
+     */
+    public function copyCyclesUnique()
+    {
+        return [
+            [
+                'source1:ucycles_developer',
+                1,
+                'copy_ucycle_1.json',
+                'copy_ucycle_1.sql'
+            ]
+        ];
+    }
+
+    /**
+     * @param $table
+     *
+     * @dataProvider copyCyclesUnique
+     */
+    public function testCyclesUnique($tableName, $primaryKey, $expectedResultFile, $expectedSqlFile)
+    {
+        $result = $this->getDm()
+            ->setHandler('source1', fopen(self::RESULT_DIR . $expectedSqlFile . '.actual', 'w'))
+            ->copyRecordsByPk($tableName, $primaryKey, false);
+        $res    = json_encode($result, JSON_PRETTY_PRINT);
+        $this->putFileContent($expectedResultFile . '.actual', $res);
+        static::assertEquals($this->getFileContent($expectedResultFile), $res);
+        static::assertEquals(
+            $this->getFileContent($expectedSqlFile),
+            $this->getFileContent($expectedSqlFile . '.actual')
+        );
     }
 }

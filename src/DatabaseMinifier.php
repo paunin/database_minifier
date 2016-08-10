@@ -722,15 +722,15 @@ class DatabaseMinifier
                     }
                 }
 
+                if (count($criteria) != count($linkItem['link'])) {
+                    continue;
+                }
+
                 if ($linkItem['is_pk_link']) {
                     $refRecordId = $criteria;
                 } else {
                     // we can't identify a record by non-PK link
                     $refRecordId = $this->makeRecordIdByCriteria($refTableName, $criteria);
-                }
-
-                if (!count($refRecordId)) {
-                    continue;
                 }
 
                 if ($this->checkIfRowCopied($refTableName, $refRecordId, false)) {
@@ -839,9 +839,11 @@ class DatabaseMinifier
             foreach ($refs as $linkItem) {
                 $criteria = [];
                 foreach ($linkItem['link'] as $fk => $pk) {
-                    $criteria[$fk] = $row[$pk];
+                    if ($row[$pk]) {
+                        $criteria[$fk] = $row[$pk];
+                    }
                 }
-                if (!count($criteria)) {
+                if (count($criteria) != count($linkItem['link'])) {
                     continue;
                 }
                 $result[$refTable] = $this->copyRecordsByCriteria(

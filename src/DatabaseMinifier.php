@@ -59,7 +59,7 @@ class DatabaseMinifier
     /**
      * DatabaseMinifier constructor.
      *
-     * @param array $connectionsConfigs where each connection in format array('dbname' => {DBNAME}, 'username' => {USERNAME}, 'password'=> {PASSWORD}, 'host' => {HOST}, 'driver' => mysql|pgsql [,'out_file' => {FILENAME}] [, 'driver_options' => {options}])
+     * @param array $connectionsConfigs where each connection in format array('dbname' => {DBNAME}, 'username' => {USERNAME}, 'password'=> {PASSWORD}, 'host' => {HOST}, 'driver' => mysql|pgsql [,'out_file' => {FILENAME} | 'out_resource' => {FILE RESOURCE}] [, 'driver_options' => {options}])
      * @param array $extraRelations
      */
     public function __construct(array $connectionsConfigs, array $extraRelations = [])
@@ -69,8 +69,18 @@ class DatabaseMinifier
         foreach ($this->connectionsConfigs as $connectionName => $connectionInfo) {
             $this->connections[$connectionName] = $this->createPdo($connectionInfo);
 
-            $outFile = array_key_exists('out_file', $connectionInfo) ? $connectionInfo['out_file'] : self::PHP_STDOUT;
-            $this->setHandler($connectionName, fopen($outFile, 'w'));
+            if (array_key_exists('out_resource', $connectionInfo)) {
+                $meta = stream_get_meta_data($connectionInfo['out_resource']);
+                if (!preg_match('/w|a|x/', $meta['mode'])) {
+                    throw new DatabaseMinifierException('File resource is not in writing mode');
+                }
+                $this->setHandler($connectionName, $connectionInfo['out_resource']);
+            } else {
+                $outFile = array_key_exists('out_file', $connectionInfo)
+                    ? $connectionInfo['out_file']
+                    : self::PHP_STDOUT;
+                $this->setHandler($connectionName, fopen($outFile, 'w'));
+            }
 
             //TODO: fix for pgsql and add more options in connection configuration to define connection for schema db
             $connectionSchemaInfo = $connectionInfo;

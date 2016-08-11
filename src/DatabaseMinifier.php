@@ -733,6 +733,10 @@ class DatabaseMinifier
                     $refRecordId = $this->makeRecordIdByCriteria($refTableName, $criteria);
                 }
 
+                if (!count($refRecordId)) {
+                    continue;
+                }
+
                 if ($this->checkIfRowCopied($refTableName, $refRecordId, false)) {
                     $result[$refTableName] = [];
                     continue;

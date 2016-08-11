@@ -1,0 +1,39 @@
+[
+    {
+        "record": {
+            "idemployee1": "1",
+            "idemployee2": "string1",
+            "name": "Jon",
+            "team_id1": "1",
+            "team_id2": "string"
+        },
+        "references": {
+            "source1:cycles_team": [
+                {
+                    "record": {
+                        "idteam1": "1",
+                        "idteam2": "string",
+                        "name": "Developers",
+                        "product_id": "2"
+                    },
+                    "references": {
+                        "source1:cycles_product": [
+                            {
+                                "record": {
+                                    "idproduct": "2",
+                                    "name": "DeployTool",
+                                    "owner_id1": "1",
+                                    "owner_id2": "string1"
+                                },
+                                "references": [],
+                                "referenced_by": []
+                            }
+                        ]
+                    },
+                    "referenced_by": []
+                }
+            ]
+        },
+        "referenced_by": []
+    }
+]

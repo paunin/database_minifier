@@ -294,7 +294,7 @@ class DatabaseMinifier
     protected function isLinkPrimaryKey($link, $targetTable)
     {
         return count($link) == count($targetTable['primary_key'])
-            && empty(array_diff($link, $targetTable['primary_key']));
+            && 0 == count(array_diff($link, $targetTable['primary_key']));
     }
 
     /**

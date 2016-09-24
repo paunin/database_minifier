@@ -52,9 +52,14 @@ class DatabaseMinifier
     protected $extraRelations = [];
 
     /**
+     * @var array
+     */
+    protected $recursionPath = [];
+
+    /**
      * DatabaseMinifier constructor.
      *
-     * @param array $connectionsConfigs where each connection in format array('dbname' => {DBNAME}, 'username' => {USERNAME}, 'password'=> {PASSWORD}, 'host' => {HOST}, 'driver' => mysql|pgsql [,'out_file' => {FILENAME}] [, 'driver_options' => {options}])
+     * @param array $connectionsConfigs where each connection in format array('dbname' => {DBNAME}, 'username' => {USERNAME}, 'password'=> {PASSWORD}, 'host' => {HOST}, 'driver' => mysql|pgsql [,'out_file' => {FILENAME} | 'out_resource' => {FILE RESOURCE}] [, 'driver_options' => {options}])
      * @param array $extraRelations
      */
     public function __construct(array $connectionsConfigs, array $extraRelations = [])
@@ -64,8 +69,18 @@ class DatabaseMinifier
         foreach ($this->connectionsConfigs as $connectionName => $connectionInfo) {
             $this->connections[$connectionName] = $this->createPdo($connectionInfo);
 
-            $outFile = array_key_exists('out_file', $connectionInfo) ? $connectionInfo['out_file'] : self::PHP_STDOUT;
-            $this->setHandler($connectionName, fopen($outFile, 'w'));
+            if (array_key_exists('out_resource', $connectionInfo)) {
+                $meta = stream_get_meta_data($connectionInfo['out_resource']);
+                if (!preg_match('/w|a|x/', $meta['mode'])) {
+                    throw new DatabaseMinifierException('File resource is not in writing mode');
+                }
+                $this->setHandler($connectionName, $connectionInfo['out_resource']);
+            } else {
+                $outFile = array_key_exists('out_file', $connectionInfo)
+                    ? $connectionInfo['out_file']
+                    : self::PHP_STDOUT;
+                $this->setHandler($connectionName, fopen($outFile, 'w'));
+            }
 
             //TODO: fix for pgsql and add more options in connection configuration to define connection for schema db
             $connectionSchemaInfo = $connectionInfo;
@@ -136,12 +151,14 @@ class DatabaseMinifier
      *          "primary_key": ["%PK1%", "%PK2%" /* , ... * /],
      *          "references": [
      *              "%table%": [
-     *                  ["%fk%": "%pk%" /* , ... * /] /* , ... * /
+     *                  "link": ["%fk%": "%pk%" /* , ... * /] /* , ... * /
+     *                  "is_pk_link": Boolean
      *              ] /* , ... * /
      *          ],
      *          "referenced_by": [
      *              "%table%": [
-     *                  ["%fk%": "%pk%" /* , ... * /] /* , ... * /
+     *                  "link": ["%fk%": "%pk%" /* , ... * /] /* , ... * /
+     *                  "is_pk_link": Boolean
      *              ] /* , ... * /
      *          ]
      *      ] /* , ... * /
@@ -198,7 +215,7 @@ class DatabaseMinifier
     protected function getPks($connectionName)
     {
         $sql   = sprintf(
-            'SELECT TABLE_NAME as \'table\',  GROUP_CONCAT(DISTINCT COLUMN_NAME SEPARATOR \',\') AS  \'pk\'
+            'SELECT TABLE_NAME as \'table\',  GROUP_CONCAT(DISTINCT COLUMN_NAME ORDER BY ORDINAL_POSITION SEPARATOR \',\') AS  \'pk\'
              FROM COLUMNS
              WHERE (TABLE_SCHEMA = \'%s\') AND (COLUMN_KEY = \'PRI\')
              GROUP BY TABLE_NAME
@@ -269,6 +286,18 @@ class DatabaseMinifier
     }
 
     /**
+     * check if the link is pointing out to PK or non-PK fields
+     * @param array $link
+     * @param array $targetTable
+     * @return bool
+     */
+    protected function isLinkPrimaryKey($link, $targetTable)
+    {
+        return count($link) == count($targetTable['primary_key'])
+            && 0 == count(array_diff($link, $targetTable['primary_key']));
+    }
+
+    /**
      * Fulfill tree of tables with references
      *
      * @param array  $tables
@@ -313,8 +342,12 @@ class DatabaseMinifier
             );
             ksort($link);
 
-            $tables[$tableName]['references'][$referencedTableName][]    = $link;
-            $tables[$referencedTableName]['referenced_by'][$tableName][] = $link;
+            $linkItem = [
+                'link'       => $link,
+                'is_pk_link' => $this->isLinkPrimaryKey($link, $tables[$referencedTableName]),
+            ];
+            $tables[$tableName]['references'][$referencedTableName][]    = $linkItem;
+            $tables[$referencedTableName]['referenced_by'][$tableName][] = $linkItem;
         }
 
         return $tables;
@@ -329,34 +362,42 @@ class DatabaseMinifier
      */
     protected function addExtraRelations($tablesTree)
     {
-        foreach ($this->extraRelations as $targetTable => $relations) {
-            if (!array_key_exists($targetTable, $tablesTree)) {
+        foreach ($this->extraRelations as $table => $relations) {
+            if (!array_key_exists($table, $tablesTree)) {
                 throw new DatabaseMinifierException(
-                    'Wrong target table name in extra relations option ('.$targetTable.') which does not exist in any schema'
+                    'Wrong target table name in extra relations option ('.$table.') which does not exist in any schema'
                 );
             }
 
-            foreach ($relations as $tableName => $links) {
-                if (!array_key_exists($tableName, $tablesTree)) {
+            foreach ($relations as $targetTable => $links) {
+                $linkItems = [];
+                foreach ($links as $link) {
+                    $linkItems[] = [
+                        'link'       => $link,
+                        'is_pk_link' => $this->isLinkPrimaryKey($link, $tablesTree[$targetTable]),
+                    ];
+                }
+
+                if (!array_key_exists($targetTable, $tablesTree)) {
                     throw new DatabaseMinifierException(
-                        'Wrong table name for reference in extra relations option ('.$tableName.') which does not exist in any schema'
+                        'Wrong table name for reference in extra relations option ('.$targetTable.') which does not exist in any schema'
                     );
                 }
 
-                if (!array_key_exists($tableName, $tablesTree[$targetTable]['references'])) {
-                    $tablesTree[$targetTable]['references'][$tableName] = [];
+                if (!array_key_exists($targetTable, $tablesTree[$table]['references'])) {
+                    $tablesTree[$table]['references'][$targetTable] = [];
                 }
-                if (!array_key_exists($targetTable, $tablesTree[$tableName]['referenced_by'])) {
-                    $tablesTree[$tableName]['referenced_by'][$targetTable] = [];
+                if (!array_key_exists($table, $tablesTree[$targetTable]['referenced_by'])) {
+                    $tablesTree[$targetTable]['referenced_by'][$table] = [];
                 }
 
-                $tablesTree[$targetTable]['references'][$tableName] = array_merge(
-                    $tablesTree[$targetTable]['references'][$tableName],
-                    $links
+                $tablesTree[$table]['references'][$targetTable] = array_merge(
+                    $tablesTree[$table]['references'][$targetTable],
+                    $linkItems
                 );
-                $tablesTree[$tableName]['referenced_by'][$targetTable] = array_merge(
-                    $tablesTree[$tableName]['referenced_by'][$targetTable],
-                    $links
+                $tablesTree[$targetTable]['referenced_by'][$table] = array_merge(
+                    $tablesTree[$targetTable]['referenced_by'][$table],
+                    $linkItems
                 );
             }
         }
@@ -431,27 +472,15 @@ class DatabaseMinifier
     }
 
     /**
-     * Copy record with all needed dependencies (constraints)
-     *
-     * @param string       $tableName        with namespace
-     * @param array|string $criteria         '{SQL EXPRESSION FOR `WHERE`}' OR
-     *                                       ['%field%' =>'%value%' /* , ... * /] OR
-     *                                       ['%field%' => ['%value1%', '%value2%', '%value3%'/*, ... * /] ] OR
-     *                                       ['%field%' => ['value' =>'%value%', 'operator' => '%operator%' ] /* , ... * /]
-     *                                       Where operator any SQL operator ( e.g. `>`, `<=`, `LIKE` )
-     * @param bool         $copyReferencedBy if we need referenced records
-     * @param int          $limit
-     *
+     * @param $tableName
+     * @param array $criteria
+     * @param int $limit
+     * @param array $fields
      * @return array
      * @throws DatabaseMinifierException
      */
-    public function copyRecordsByCriteria(
-        $tableName,
-        $criteria = [],
-        $copyReferencedBy = true,
-        $limit = 0
-    ) {
-        $results    = [];
+    protected function prepareSql($tableName, $criteria = [], $limit = 0, $fields = [])
+    {
         $conditions = [];
         $params     = [];
 
@@ -487,33 +516,61 @@ class DatabaseMinifier
         }
 
         $sql = sprintf(
-            'SELECT * FROM %s %s %s',
+            'SELECT %s FROM %s %s %s',
+            empty($fields) ? '*' : implode(',', $fields),
             $this->cleanTableName($tableName),
             $where,
             $limit ? ' LIMIT '.$limit : ''
         );
+        return [$sql, $params];
+    }
+
+    /**
+     * Copy record with all needed dependencies (constraints)
+     *
+     * @param string       $tableName        with namespace
+     * @param array|string $criteria         '{SQL EXPRESSION FOR `WHERE`}' OR
+     *                                       ['%field%' =>'%value%' /* , ... * /] OR
+     *                                       ['%field%' => ['%value1%', '%value2%', '%value3%'/*, ... * /] ] OR
+     *                                       ['%field%' => ['value' =>'%value%', 'operator' => '%operator%' ] /* , ... * /]
+     *                                       Where operator any SQL operator ( e.g. `>`, `<=`, `LIKE` )
+     * @param bool         $copyReferencedBy if we need referenced records
+     * @param int          $limit
+     *
+     * @return array
+     * @throws DatabaseMinifierException
+     */
+    public function copyRecordsByCriteria(
+        $tableName,
+        $criteria = [],
+        $copyReferencedBy = true,
+        $limit = 0
+    ) {
+        $results = [];
+        list($sql, $params) = $this->prepareSql($tableName, $criteria, $limit);
 
         $query = $this->getConnectionForTable($tableName)
                       ->prepare($sql);
         $query->execute($params);
 
         while ($row = $query->fetch(\PDO::FETCH_ASSOC)) {
-            // if row has been copied with ReferencedBy
-            // or we don't need ReferencedBy, but we have had any copy of this row
-            if ($this->checkIfRowCopied($tableName, $row, true)
-                || (!$copyReferencedBy && $this->checkIfRowCopied($tableName, $row))
-            ) {
+            $recordId = $this->makeRecordIdByRow($tableName, $row);
+
+            // if $copyReferencedBy == fasle, we continue if we have had ANY copy of that row
+            // if $copyReferencedBy == true, we continue if we have already copied that row with $copyReferencedBy==True ONLY
+            if ($this->checkIfRowCopied($tableName, $recordId, $copyReferencedBy)) {
                 continue;
             }
-
             $result = [
                 'record'        => [],
                 'references'    => [],
                 'referenced_by' => [],
             ];
-
-            if (!$this->checkIfRowCopied($tableName, $row)) {
-                //TODO: what if we have not existed references
+            // this check will skip this statement if:
+            // - now we have $copyReferencedBy == true
+            // - we have already copied that row with $copyReferencedBy==False
+            // so we don't need to copy the straight references once more
+            if (!$this->checkIfRowCopied($tableName, $recordId)) {
                 $result['references'] = $this->copyReferences($tableName, $row);
                 $this->pasteRow($tableName, $row);
                 $this->markRowAsCopied($tableName, $row, $copyReferencedBy);
@@ -572,14 +629,14 @@ class DatabaseMinifier
 
     /**
      * @param string $tableName
-     * @param array  $row
-     * @param boolean $withReferencedBy
+     * @param $recordId
+     * @param boolean $checkIfReferencedByAreCopiedToo
      * @return bool
      */
-    protected function checkIfRowCopied($tableName, $row, $withReferencedBy = false)
+    protected function checkIfRowCopied($tableName, $recordId, $checkIfReferencedByAreCopiedToo = false)
     {
-        $hash = $this->makeRowHash($tableName, $row);
-        if ($withReferencedBy) {
+        $hash = $this->makeRowHash($tableName, $recordId);
+        if ($checkIfReferencedByAreCopiedToo) {
             return array_key_exists($hash, $this->copied) && 1 == $this->copied[$hash];
         } else {
             return array_key_exists($hash, $this->copied);
@@ -588,13 +645,53 @@ class DatabaseMinifier
 
     /**
      * @param string $tableName
-     * @param array  $row
+     * @param array  $recordId
      *
      * @return string
      */
-    protected function makeRowHash($tableName, $row)
+    protected function makeRowHash($tableName, $recordId)
     {
-        return md5($tableName.implode('::', $row));
+        return $tableName.'::'.implode(':', array_values($recordId));
+    }
+
+    /**
+     * @param $tableName
+     * @param array $row
+     * @return array
+     */
+    protected function makeRecordIdByRow($tableName, array $row)
+    {
+        $table = $this->getTable($tableName);
+        $recordId = [];
+        foreach ($table['primary_key'] as $primaryKey) {
+            $recordId[$primaryKey] = $row[$primaryKey];
+        }
+        return $recordId;
+    }
+
+    /**
+     * @param $tableName
+     * @param array $criteria
+     * @return array|mixed
+     * @throws DatabaseMinifierException
+     */
+    protected function makeRecordIdByCriteria($tableName, array $criteria)
+    {
+        $table = $this->getTable($tableName);
+        list($sql, $params) = $this->prepareSql($tableName, $criteria, 2, $table['primary_key']);
+        $query = $this->getConnectionForTable($tableName)
+            ->prepare($sql);
+        $query->execute($params);
+
+        if (!($row = $query->fetch(\PDO::FETCH_ASSOC))) {
+            return [];
+        }
+        if ($query->fetch(\PDO::FETCH_ASSOC)) {
+            throw new DatabaseMinifierException(
+                'The foreign key must refer to unique or primary key, but it refers to: '.$tableName.print_r($criteria, true)
+            );
+        }
+        return $row;
     }
 
     /**
@@ -612,19 +709,49 @@ class DatabaseMinifier
     ) {
         $result = [];
         $table  = $this->getTable($tableName);
-        foreach ($table['references'] as $refTable => $refs) {
-            foreach ($refs as $links) {
+
+        $recordId = $this->makeRecordIdByRow($tableName, $row);
+        array_push($this->recursionPath, $this->makeRowHash($tableName, $recordId));
+
+        foreach ($table['references'] as $refTableName => $refs) {
+            foreach ($refs as $linkItem) {
                 $criteria = [];
-                foreach ($links as $fk => $pk) {
+                foreach ($linkItem['link'] as $fk => $pk) {
                     if ($row[$fk]) {
                         $criteria[$pk] = $row[$fk];
                     }
                 }
-                if (count($criteria)) {
-                    $result[$refTable] = $this->copyRecordsByCriteria($refTable, $criteria, false);
+
+                if (count($criteria) != count($linkItem['link'])) {
+                    continue;
                 }
+
+                if ($linkItem['is_pk_link']) {
+                    $refRecordId = $criteria;
+                } else {
+                    // we can't identify a record by non-PK link
+                    $refRecordId = $this->makeRecordIdByCriteria($refTableName, $criteria);
+                }
+
+                if (!count($refRecordId)) {
+                    continue;
+                }
+
+                if ($this->checkIfRowCopied($refTableName, $refRecordId, false)) {
+                    $result[$refTableName] = [];
+                    continue;
+                }
+
+                // check recursion
+                if (in_array($this->makeRowHash($refTableName, $refRecordId), $this->recursionPath)) {
+                    continue;
+                }
+
+                $result[$refTableName] = $this->copyRecordsByCriteria($refTableName, $refRecordId, false);
             }
         }
+
+        array_pop($this->recursionPath);
 
         return $result;
     }
@@ -690,7 +817,8 @@ class DatabaseMinifier
      */
     protected function markRowAsCopied($tableName, $row, $withReferencedBy)
     {
-        return $this->copied[$this->makeRowHash($tableName, $row)] = $withReferencedBy ? 1 : 0;
+        $recordId = $this->makeRecordIdByRow($tableName, $row);
+        return $this->copied[$this->makeRowHash($tableName, $recordId)] = $withReferencedBy ? 1 : 0;
     }
 
     /**
@@ -710,14 +838,20 @@ class DatabaseMinifier
     ) {
         $result = [];
         $table  = $this->getTable($tableName);
-        foreach ($table['referenced_by'] as $table => $refs) {
-            foreach ($refs as $links) {
+        // no need to check cycles while following referencedBy links, all predecessors have already been written
+        foreach ($table['referenced_by'] as $refTable => $refs) {
+            foreach ($refs as $linkItem) {
                 $criteria = [];
-                foreach ($links as $fk => $pk) {
-                    $criteria[$fk] = $row[$pk];
+                foreach ($linkItem['link'] as $fk => $pk) {
+                    if ($row[$pk]) {
+                        $criteria[$fk] = $row[$pk];
+                    }
                 }
-                $result[$table] = $this->copyRecordsByCriteria(
-                    $table,
+                if (count($criteria) != count($linkItem['link'])) {
+                    continue;
+                }
+                $result[$refTable] = $this->copyRecordsByCriteria(
+                    $refTable,
                     $criteria,
                     $copyReferencedBy
                 );

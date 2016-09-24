@@ -1,5 +1,5 @@
 {
-  "name": "lazada/database-minifier",
+  "name": "paunin/database-minifier",
   "description": "This package allows you to: move one record(with all dependencies) from one Db to another with the same structure",
   "keywords": [],
   "homepage": "https://gitlab.lzd.co/operations/database-minifier/",

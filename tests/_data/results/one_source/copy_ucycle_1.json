@@ -1,0 +1,36 @@
+[
+    {
+        "record": {
+            "iddeveloper": "1",
+            "name": "Jon",
+            "employee_no": "XYZ123",
+            "software_id": "1"
+        },
+        "references": {
+            "source1:ucycles_software": [
+                {
+                    "record": {
+                        "idsoftware": "1",
+                        "name": "User Tracker",
+                        "department_id": "1"
+                    },
+                    "references": {
+                        "source1:ucycles_department": [
+                            {
+                                "record": {
+                                    "iddepartment": "1",
+                                    "name": "UserXP",
+                                    "head_employee_no": "XYZ123"
+                                },
+                                "references": [],
+                                "referenced_by": []
+                            }
+                        ]
+                    },
+                    "referenced_by": []
+                }
+            ]
+        },
+        "referenced_by": []
+    }
+]

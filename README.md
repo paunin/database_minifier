@@ -19,7 +19,7 @@ Add information about new package in your `composer.json`
         {
           "type": "vcs",
           "url": "git@gitlab.lzd.co:operations/database-minifier.git",
-          "name": "lazada/database-minifier"
+          "name": "paunin/database-minifier"
         }
     ],
     
